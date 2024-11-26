@@ -1,6 +1,5 @@
 with base as 
-(
-    select 
+(    select 
         a.visit_id,
         a.customer_id,
         b.transaction_id
