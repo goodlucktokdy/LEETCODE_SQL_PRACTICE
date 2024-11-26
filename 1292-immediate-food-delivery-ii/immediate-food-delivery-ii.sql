@@ -1,4 +1,5 @@
-with base as (
+with base as 
+(
     select 
         a.delivery_id,
         a.customer_id,
