@@ -1,15 +1,32 @@
 # Write your MySQL query statement below
-with t1 as
-    (
-    select
-        d.name Department,
-        e.name Employee,
-        e.salary Salary,
-        dense_rank() over (partition by e.departmentId order by e.salary desc) sal_rank
-    from Employee e
-    inner join Department d
-    on e.departmentId = d.id
-    )
-select Department, Employee, Salary
-from t1
-where sal_rank <= 3
+with base as (
+    select 
+        b.name as Department,
+        a.departmentId,
+        a.id,
+        a.name,
+        a.salary
+    from 
+        Employee a 
+    left join 
+        Department b 
+    on 
+        a.departmentId = b.id
+)
+select 
+    distinct
+    a.Department,
+    a.Employee,
+    a.Salary
+from (
+    select 
+        Department,
+        departmentId,
+        dense_rank() over (partition by departmentId order by salary desc) as ranks,
+        name as Employee,
+        salary as Salary
+    from 
+        base
+) a
+where 
+    ranks <= 3
