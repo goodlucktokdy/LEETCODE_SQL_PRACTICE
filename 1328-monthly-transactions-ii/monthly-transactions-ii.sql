@@ -18,7 +18,7 @@ with base as (
     select 
         date_format(trans_date,'%Y-%m') as month,
         country,
-        count(id) as approved_count,
+        count(distinct id) as approved_count,
         sum(amount) as approved_amount,
         0 as chargeback_count,
         0 as chargeback_amount
