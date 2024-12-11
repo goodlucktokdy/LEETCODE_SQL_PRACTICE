@@ -24,6 +24,6 @@ inner join
 on 
     a.id = b.id
 where 
-    timestampdiff(day,prev_four_days,login_date) = 4
+    prev_four_days + interval 4 day = login_date
 order by 
     id
