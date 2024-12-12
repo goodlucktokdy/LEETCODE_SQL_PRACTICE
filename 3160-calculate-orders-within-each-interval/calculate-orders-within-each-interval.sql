@@ -6,7 +6,7 @@ from (
     select 
         minute,
         order_count,
-        sum(case when minute % 6 = 1 then 1 else 0 end) over (order by minute) as interval_no
+        ceil(minute / 6) as interval_no 
     from 
         Orders
 ) a
