@@ -6,13 +6,10 @@ with base as (
         max(salary) over (partition by department) as sal
     from 
         Salaries
+    where 
+        department in ('Marketing','Engineering')
 )
 select 
-    abs(a.eng-a.mar) as salary_difference
-from (
-    select 
-        max(case when department like '%Eng%' then sal end) as eng,
-        max(case when department like '%Mar%' then sal end) as mar
-    from 
-        base
-) a
+    max(sal) - min(sal) as salary_difference
+from 
+    base
