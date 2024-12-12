@@ -1,0 +1,1 @@
+<h2>class-performance Notes</h2><hr>[ Time taken: 2 m 40 s ]
