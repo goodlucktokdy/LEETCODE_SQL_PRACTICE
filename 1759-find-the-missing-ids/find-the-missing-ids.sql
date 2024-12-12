@@ -11,14 +11,10 @@ with recursive cte as (
         cte.id < (select max(customer_id) from Customers where customer_id <= 100)
 )
 select 
-    a.id as ids
+    id as ids
 from 
-    cte a 
-left join 
-    Customers b 
-on 
-    a.id = b.customer_id
+    cte
 where 
-    b.customer_id is null
+    id not in (select customer_id from Customers)
 order by 
     ids
