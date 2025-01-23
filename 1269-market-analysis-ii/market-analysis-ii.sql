@@ -1,0 +1,540 @@
+-- -- -- -- -- -- -- -- -- -- -- -- -- -- # Write your MySQL query statement below
+-- -- -- -- -- -- -- -- -- -- -- -- -- -- with second_sold as (
+-- -- -- -- -- -- -- -- -- -- -- -- -- --     select 
+-- -- -- -- -- -- -- -- -- -- -- -- -- --         a.seller_id,
+-- -- -- -- -- -- -- -- -- -- -- -- -- --         a.item_id,
+-- -- -- -- -- -- -- -- -- -- -- -- -- --         a.date_ranks
+-- -- -- -- -- -- -- -- -- -- -- -- -- --     from (
+-- -- -- -- -- -- -- -- -- -- -- -- -- --         select 
+-- -- -- -- -- -- -- -- -- -- -- -- -- --             seller_id,
+-- -- -- -- -- -- -- -- -- -- -- -- -- --             item_id,
+-- -- -- -- -- -- -- -- -- -- -- -- -- --             dense_rank() over (partition by seller_id order by order_date) as date_ranks
+-- -- -- -- -- -- -- -- -- -- -- -- -- --         from 
+-- -- -- -- -- -- -- -- -- -- -- -- -- --             Orders
+-- -- -- -- -- -- -- -- -- -- -- -- -- --     ) a
+-- -- -- -- -- -- -- -- -- -- -- -- -- --     where 
+-- -- -- -- -- -- -- -- -- -- -- -- -- --         a.date_ranks = 2
+-- -- -- -- -- -- -- -- -- -- -- -- -- -- )
+-- -- -- -- -- -- -- -- -- -- -- -- -- -- ,second_favorites as (
+-- -- -- -- -- -- -- -- -- -- -- -- -- --     select 
+-- -- -- -- -- -- -- -- -- -- -- -- -- --         a.user_id as seller_id,
+-- -- -- -- -- -- -- -- -- -- -- -- -- --         a.favorite_brand,
+-- -- -- -- -- -- -- -- -- -- -- -- -- --         coalesce(if(a.favorite_brand = c.item_brand, 'yes','no'),0) as 2nd_item_fav_brand
+-- -- -- -- -- -- -- -- -- -- -- -- -- --     from 
+-- -- -- -- -- -- -- -- -- -- -- -- -- --         Users a 
+-- -- -- -- -- -- -- -- -- -- -- -- -- --     left join 
+-- -- -- -- -- -- -- -- -- -- -- -- -- --         second_sold b
+-- -- -- -- -- -- -- -- -- -- -- -- -- --     on 
+-- -- -- -- -- -- -- -- -- -- -- -- -- --         a.user_id = b.seller_id
+-- -- -- -- -- -- -- -- -- -- -- -- -- --     left join 
+-- -- -- -- -- -- -- -- -- -- -- -- -- --         Items c
+-- -- -- -- -- -- -- -- -- -- -- -- -- --     on 
+-- -- -- -- -- -- -- -- -- -- -- -- -- --         b.item_id = c.item_id
+-- -- -- -- -- -- -- -- -- -- -- -- -- -- )
+-- -- -- -- -- -- -- -- -- -- -- -- -- -- select 
+-- -- -- -- -- -- -- -- -- -- -- -- -- --     seller_id,
+-- -- -- -- -- -- -- -- -- -- -- -- -- --     2nd_item_fav_brand
+-- -- -- -- -- -- -- -- -- -- -- -- -- -- from 
+-- -- -- -- -- -- -- -- -- -- -- -- -- --     second_favorites
+
+-- -- -- -- -- -- -- -- -- -- -- -- -- with base as (
+-- -- -- -- -- -- -- -- -- -- -- -- --     select 
+-- -- -- -- -- -- -- -- -- -- -- -- --         a.order_id,
+-- -- -- -- -- -- -- -- -- -- -- -- --         a.order_date,
+-- -- -- -- -- -- -- -- -- -- -- -- --         a.item_id,
+-- -- -- -- -- -- -- -- -- -- -- -- --         b.item_brand,
+-- -- -- -- -- -- -- -- -- -- -- -- --         a.seller_id
+-- -- -- -- -- -- -- -- -- -- -- -- --     from 
+-- -- -- -- -- -- -- -- -- -- -- -- --         Orders a 
+-- -- -- -- -- -- -- -- -- -- -- -- --     inner join 
+-- -- -- -- -- -- -- -- -- -- -- -- --         Items b 
+-- -- -- -- -- -- -- -- -- -- -- -- --     on 
+-- -- -- -- -- -- -- -- -- -- -- -- --         a.item_id = b.item_id
+-- -- -- -- -- -- -- -- -- -- -- -- -- ),
+-- -- -- -- -- -- -- -- -- -- -- -- -- rnum_cte as (
+-- -- -- -- -- -- -- -- -- -- -- -- --     select 
+-- -- -- -- -- -- -- -- -- -- -- -- --         a.user_id,
+-- -- -- -- -- -- -- -- -- -- -- -- --         a.favorite_brand,
+-- -- -- -- -- -- -- -- -- -- -- -- --         b.order_date,
+-- -- -- -- -- -- -- -- -- -- -- -- --         b.item_brand,
+-- -- -- -- -- -- -- -- -- -- -- -- --         row_number() over (partition by a.user_id order by b.order_date asc) as rnums
+-- -- -- -- -- -- -- -- -- -- -- -- --     from 
+-- -- -- -- -- -- -- -- -- -- -- -- --         Users a 
+-- -- -- -- -- -- -- -- -- -- -- -- --     left join 
+-- -- -- -- -- -- -- -- -- -- -- -- --         base b
+-- -- -- -- -- -- -- -- -- -- -- -- --     on 
+-- -- -- -- -- -- -- -- -- -- -- -- --         a.user_id = b.seller_id 
+-- -- -- -- -- -- -- -- -- -- -- -- -- )
+-- -- -- -- -- -- -- -- -- -- -- -- -- select 
+-- -- -- -- -- -- -- -- -- -- -- -- --     seller_id,
+-- -- -- -- -- -- -- -- -- -- -- -- --     case when 2nd_item_fav_brand = 0 then 'no' else 'yes' end as 2nd_item_fav_brand
+-- -- -- -- -- -- -- -- -- -- -- -- -- from (
+-- -- -- -- -- -- -- -- -- -- -- -- --     select 
+-- -- -- -- -- -- -- -- -- -- -- -- --         user_id as seller_id,
+-- -- -- -- -- -- -- -- -- -- -- -- --         max(case when favorite_brand = item_brand and rnums = 2 then 1
+-- -- -- -- -- -- -- -- -- -- -- -- --             else 0 end) as 2nd_item_fav_brand
+-- -- -- -- -- -- -- -- -- -- -- -- --     from 
+-- -- -- -- -- -- -- -- -- -- -- -- --         rnum_cte
+-- -- -- -- -- -- -- -- -- -- -- -- --     group by 
+-- -- -- -- -- -- -- -- -- -- -- -- --         seller_id
+-- -- -- -- -- -- -- -- -- -- -- -- -- ) a
+-- -- -- -- -- -- -- -- -- -- -- -- with base as (
+-- -- -- -- -- -- -- -- -- -- -- --     select 
+-- -- -- -- -- -- -- -- -- -- -- --         a.user_id,
+-- -- -- -- -- -- -- -- -- -- -- --         a.favorite_brand,
+-- -- -- -- -- -- -- -- -- -- -- --         b.order_date,
+-- -- -- -- -- -- -- -- -- -- -- --         b.item_id,
+-- -- -- -- -- -- -- -- -- -- -- --         c.item_brand
+-- -- -- -- -- -- -- -- -- -- -- --     from 
+-- -- -- -- -- -- -- -- -- -- -- --         Users a 
+-- -- -- -- -- -- -- -- -- -- -- --     left join 
+-- -- -- -- -- -- -- -- -- -- -- --         Orders b
+-- -- -- -- -- -- -- -- -- -- -- --     on 
+-- -- -- -- -- -- -- -- -- -- -- --         a.user_id = b.seller_id
+-- -- -- -- -- -- -- -- -- -- -- --     left join 
+-- -- -- -- -- -- -- -- -- -- -- --         Items c
+-- -- -- -- -- -- -- -- -- -- -- --     on 
+-- -- -- -- -- -- -- -- -- -- -- --         b.item_id = c.item_id
+-- -- -- -- -- -- -- -- -- -- -- -- ),
+-- -- -- -- -- -- -- -- -- -- -- -- final_info as (
+-- -- -- -- -- -- -- -- -- -- -- --     select 
+-- -- -- -- -- -- -- -- -- -- -- --         user_id as seller_id,
+-- -- -- -- -- -- -- -- -- -- -- --         favorite_brand,
+-- -- -- -- -- -- -- -- -- -- -- --         item_brand,
+-- -- -- -- -- -- -- -- -- -- -- --         order_date,
+-- -- -- -- -- -- -- -- -- -- -- --         row_number() over (partition by user_id order by order_date) as rnums
+-- -- -- -- -- -- -- -- -- -- -- --     from 
+-- -- -- -- -- -- -- -- -- -- -- --         base
+-- -- -- -- -- -- -- -- -- -- -- -- ),
+-- -- -- -- -- -- -- -- -- -- -- -- last_info as (
+-- -- -- -- -- -- -- -- -- -- -- --     select 
+-- -- -- -- -- -- -- -- -- -- -- --         a.seller_id,
+-- -- -- -- -- -- -- -- -- -- -- --         a.favorite_brand,
+-- -- -- -- -- -- -- -- -- -- -- --         a.item_brand,
+-- -- -- -- -- -- -- -- -- -- -- --         a.rnums
+-- -- -- -- -- -- -- -- -- -- -- --     from 
+-- -- -- -- -- -- -- -- -- -- -- --         final_info a 
+-- -- -- -- -- -- -- -- -- -- -- --     left join 
+-- -- -- -- -- -- -- -- -- -- -- --         final_info b
+-- -- -- -- -- -- -- -- -- -- -- --     on 
+-- -- -- -- -- -- -- -- -- -- -- --         a.seller_id = b.seller_id and a.rnums = b.rnums 
+-- -- -- -- -- -- -- -- -- -- -- -- )
+-- -- -- -- -- -- -- -- -- -- -- -- select 
+-- -- -- -- -- -- -- -- -- -- -- --     distinct 
+-- -- -- -- -- -- -- -- -- -- -- --     seller_id,
+-- -- -- -- -- -- -- -- -- -- -- --     case when seller_id in (select seller_id from last_info where rnums = 2 and favorite_brand = item_brand) then 'yes' else 'no' end as 2nd_item_fav_brand
+-- -- -- -- -- -- -- -- -- -- -- -- from 
+-- -- -- -- -- -- -- -- -- -- -- --     last_info
+
+-- -- -- -- -- -- -- -- -- -- -- with base as (
+-- -- -- -- -- -- -- -- -- -- --     select 
+-- -- -- -- -- -- -- -- -- -- --         a.order_id,
+-- -- -- -- -- -- -- -- -- -- --         a.order_date,
+-- -- -- -- -- -- -- -- -- -- --         a.item_id,
+-- -- -- -- -- -- -- -- -- -- --         b.item_brand,
+-- -- -- -- -- -- -- -- -- -- --         a.seller_id
+-- -- -- -- -- -- -- -- -- -- --     from 
+-- -- -- -- -- -- -- -- -- -- --         Orders a
+-- -- -- -- -- -- -- -- -- -- --     inner join
+-- -- -- -- -- -- -- -- -- -- --         Items b
+-- -- -- -- -- -- -- -- -- -- --     on 
+-- -- -- -- -- -- -- -- -- -- --         a.item_id = b.item_id
+-- -- -- -- -- -- -- -- -- -- -- ),
+-- -- -- -- -- -- -- -- -- -- -- final_info as (
+-- -- -- -- -- -- -- -- -- -- --     select 
+-- -- -- -- -- -- -- -- -- -- --         a.user_id as seller_id,
+-- -- -- -- -- -- -- -- -- -- --         a.favorite_brand,
+-- -- -- -- -- -- -- -- -- -- --         b.order_date,
+-- -- -- -- -- -- -- -- -- -- --         b.item_brand,
+-- -- -- -- -- -- -- -- -- -- --         row_number() over (partition by a.user_id order by order_date) as rnums
+-- -- -- -- -- -- -- -- -- -- --     from 
+-- -- -- -- -- -- -- -- -- -- --         Users a
+-- -- -- -- -- -- -- -- -- -- --     left join 
+-- -- -- -- -- -- -- -- -- -- --         base b 
+-- -- -- -- -- -- -- -- -- -- --     on 
+-- -- -- -- -- -- -- -- -- -- --         a.user_id = b.seller_id
+-- -- -- -- -- -- -- -- -- -- -- ),
+-- -- -- -- -- -- -- -- -- -- -- last_info as (
+-- -- -- -- -- -- -- -- -- -- --     select 
+-- -- -- -- -- -- -- -- -- -- --         seller_id,
+-- -- -- -- -- -- -- -- -- -- --         case when item_brand = favorite_brand then 'yes' else 'no' end as 2nd_item_fav_brand
+-- -- -- -- -- -- -- -- -- -- --     from 
+-- -- -- -- -- -- -- -- -- -- --         final_info
+-- -- -- -- -- -- -- -- -- -- --     where 
+-- -- -- -- -- -- -- -- -- -- --         seller_id not in (select seller_id from Orders group by order_date,seller_id having count(distinct order_id) >= 2) and rnums = 2
+-- -- -- -- -- -- -- -- -- -- -- ) 
+-- -- -- -- -- -- -- -- -- -- -- select 
+-- -- -- -- -- -- -- -- -- -- --     a.user_id as seller_id,
+-- -- -- -- -- -- -- -- -- -- --     ifnull(b.2nd_item_fav_brand,'no') as 2nd_item_fav_brand
+-- -- -- -- -- -- -- -- -- -- -- from 
+-- -- -- -- -- -- -- -- -- -- --     Users a
+-- -- -- -- -- -- -- -- -- -- -- left join
+-- -- -- -- -- -- -- -- -- -- --     last_info b 
+-- -- -- -- -- -- -- -- -- -- -- on 
+-- -- -- -- -- -- -- -- -- -- --     a.user_id = b.seller_id
+
+-- -- -- -- -- -- -- -- -- -- with base as (
+-- -- -- -- -- -- -- -- -- --     select 
+-- -- -- -- -- -- -- -- -- --         a.order_date,
+-- -- -- -- -- -- -- -- -- --         a.seller_id,
+-- -- -- -- -- -- -- -- -- --         a.item_id,
+-- -- -- -- -- -- -- -- -- --         b.item_brand,
+-- -- -- -- -- -- -- -- -- --         row_number() over (partition by a.seller_id order by a.order_date) as rnums
+-- -- -- -- -- -- -- -- -- --     from 
+-- -- -- -- -- -- -- -- -- --         Orders a 
+-- -- -- -- -- -- -- -- -- --     inner join 
+-- -- -- -- -- -- -- -- -- --         Items b 
+-- -- -- -- -- -- -- -- -- --     on 
+-- -- -- -- -- -- -- -- -- --         a.item_id = b.item_id
+-- -- -- -- -- -- -- -- -- -- )
+-- -- -- -- -- -- -- -- -- -- select 
+-- -- -- -- -- -- -- -- -- --     a.user_id as seller_id,
+-- -- -- -- -- -- -- -- -- --     case when a.favorite_brand = b.2nd_item_fav_brand then 'yes' else 'no' end as 2nd_item_fav_brand
+-- -- -- -- -- -- -- -- -- -- from 
+-- -- -- -- -- -- -- -- -- --     Users a 
+-- -- -- -- -- -- -- -- -- -- left join (
+-- -- -- -- -- -- -- -- -- --     select 
+-- -- -- -- -- -- -- -- -- --         seller_id,
+-- -- -- -- -- -- -- -- -- --         item_brand as 2nd_item_fav_brand
+-- -- -- -- -- -- -- -- -- --     from 
+-- -- -- -- -- -- -- -- -- --         base a 
+-- -- -- -- -- -- -- -- -- --     where exists
+-- -- -- -- -- -- -- -- -- --                 (select 1 from Users b where a.seller_id = b.user_id 
+-- -- -- -- -- -- -- -- -- --                 and b.favorite_brand = a.item_brand and rnums = 2)
+-- -- -- -- -- -- -- -- -- -- ) b 
+-- -- -- -- -- -- -- -- -- -- on 
+-- -- -- -- -- -- -- -- -- --     a.user_id = b.seller_id
+
+
+-- -- -- -- -- -- -- -- -- with base as (
+-- -- -- -- -- -- -- -- --     select 
+-- -- -- -- -- -- -- -- --         o.order_date,
+-- -- -- -- -- -- -- -- --         o.seller_id,
+-- -- -- -- -- -- -- -- --         o.order_id,
+-- -- -- -- -- -- -- -- --         i.item_brand,
+-- -- -- -- -- -- -- -- --         row_number() over (partition by o.seller_id order by o.order_date) as sequence
+-- -- -- -- -- -- -- -- --     from 
+-- -- -- -- -- -- -- -- --         Orders o
+-- -- -- -- -- -- -- -- --     inner join 
+-- -- -- -- -- -- -- -- --         Items i
+-- -- -- -- -- -- -- -- --     on 
+-- -- -- -- -- -- -- -- --         o.item_id = i.item_id
+-- -- -- -- -- -- -- -- -- ),
+-- -- -- -- -- -- -- -- -- final_info as (
+-- -- -- -- -- -- -- -- --     select
+-- -- -- -- -- -- -- -- --         seller_id,
+-- -- -- -- -- -- -- -- --         item_brand
+-- -- -- -- -- -- -- -- --     from 
+-- -- -- -- -- -- -- -- --         base b
+-- -- -- -- -- -- -- -- --     where 
+-- -- -- -- -- -- -- -- --         exists (select 1 from Users u 
+-- -- -- -- -- -- -- -- --                 where u.user_id = b.seller_id and b.sequence = 2 and u.favorite_brand = b.item_brand)
+-- -- -- -- -- -- -- -- -- )
+-- -- -- -- -- -- -- -- -- select 
+-- -- -- -- -- -- -- -- --     u.user_id as seller_id,
+-- -- -- -- -- -- -- -- --     if(f.item_brand is null,'no','yes') as 2nd_item_fav_brand
+-- -- -- -- -- -- -- -- -- from 
+-- -- -- -- -- -- -- -- --     Users u
+-- -- -- -- -- -- -- -- -- left join 
+-- -- -- -- -- -- -- -- --     final_info f
+-- -- -- -- -- -- -- -- -- on 
+-- -- -- -- -- -- -- -- --     u.user_id = f.seller_id
+
+-- -- -- -- -- -- -- -- with base as (
+-- -- -- -- -- -- -- --     select 
+-- -- -- -- -- -- -- --         a.order_id,
+-- -- -- -- -- -- -- --         a.item_id,
+-- -- -- -- -- -- -- --         b.item_brand,
+-- -- -- -- -- -- -- --         a.order_date,
+-- -- -- -- -- -- -- --         a.seller_id,
+-- -- -- -- -- -- -- --         dense_rank() over (partition by a.seller_id order by order_date) as order_sequence
+-- -- -- -- -- -- -- --     from 
+-- -- -- -- -- -- -- --         Orders a 
+-- -- -- -- -- -- -- --     inner join 
+-- -- -- -- -- -- -- --         Items b 
+-- -- -- -- -- -- -- --     on 
+-- -- -- -- -- -- -- --         a.item_id = b.item_id
+-- -- -- -- -- -- -- -- )
+-- -- -- -- -- -- -- -- select 
+-- -- -- -- -- -- -- --     a.user_id as seller_id,
+-- -- -- -- -- -- -- --     case when b.item_brand = a.favorite_brand then 'yes' else 'no' end as '2nd_item_fav_brand'
+-- -- -- -- -- -- -- -- from 
+-- -- -- -- -- -- -- --     Users a 
+-- -- -- -- -- -- -- -- left join (
+-- -- -- -- -- -- -- --     select 
+-- -- -- -- -- -- -- --         item_id,
+-- -- -- -- -- -- -- --         item_brand,
+-- -- -- -- -- -- -- --         seller_id 
+-- -- -- -- -- -- -- --     from 
+-- -- -- -- -- -- -- --         base a 
+-- -- -- -- -- -- -- --     where exists 
+-- -- -- -- -- -- -- --         (select 1 from Users b 
+-- -- -- -- -- -- -- --         where b.user_id = a.seller_id and a.order_sequence = 2 and a.item_brand = b.favorite_brand)
+-- -- -- -- -- -- -- -- ) b 
+-- -- -- -- -- -- -- -- on
+-- -- -- -- -- -- -- --     a.user_id = b.seller_id
+-- -- -- -- -- -- -- with base as (
+-- -- -- -- -- -- --     select 
+-- -- -- -- -- -- --         o.order_date,
+-- -- -- -- -- -- --         o.item_id,
+-- -- -- -- -- -- --         i.item_brand,
+-- -- -- -- -- -- --         o.seller_id,
+-- -- -- -- -- -- --         row_number() over (partition by o.seller_id order by o.order_date) as rnums
+-- -- -- -- -- -- --     from 
+-- -- -- -- -- -- --         Orders o 
+-- -- -- -- -- -- --     inner join 
+-- -- -- -- -- -- --         Items i 
+-- -- -- -- -- -- --     on 
+-- -- -- -- -- -- --         o.item_id = i.item_id
+-- -- -- -- -- -- -- ),
+-- -- -- -- -- -- -- fav_brand as (
+-- -- -- -- -- -- --     select 
+-- -- -- -- -- -- --         user_id as seller_id,
+-- -- -- -- -- -- --         favorite_brand
+-- -- -- -- -- -- --     from 
+-- -- -- -- -- -- --         Users u
+-- -- -- -- -- -- --     where exists 
+-- -- -- -- -- -- --         (select 1 from base b 
+-- -- -- -- -- -- --         where u.user_id = b.seller_id 
+-- -- -- -- -- -- --         and b.rnums = 2 and u.favorite_brand = b.item_brand)
+-- -- -- -- -- -- -- )
+-- -- -- -- -- -- -- select 
+-- -- -- -- -- -- --     a.user_id as seller_id,
+-- -- -- -- -- -- --     if(b.favorite_brand is null,'no','yes') as 2nd_item_fav_brand
+-- -- -- -- -- -- -- from 
+-- -- -- -- -- -- --     Users a 
+-- -- -- -- -- -- -- left join 
+-- -- -- -- -- -- --     fav_brand b 
+-- -- -- -- -- -- -- on 
+-- -- -- -- -- -- --     a.user_id = b.seller_id
+-- -- -- -- -- -- with base as (
+-- -- -- -- -- --     select 
+-- -- -- -- -- --         a.order_date,
+-- -- -- -- -- --         a.item_id,
+-- -- -- -- -- --         b.item_brand,
+-- -- -- -- -- --         a.seller_id,
+-- -- -- -- -- --         dense_rank() over (partition by a.seller_id order by a.order_date asc) as order_sequence
+-- -- -- -- -- --     from 
+-- -- -- -- -- --         Orders a 
+-- -- -- -- -- --     inner join 
+-- -- -- -- -- --         Items b 
+-- -- -- -- -- --     on 
+-- -- -- -- -- --         a.item_id = b.item_id 
+-- -- -- -- -- -- ),
+-- -- -- -- -- -- fav_brand_info as (
+-- -- -- -- -- --     select 
+-- -- -- -- -- --         seller_id,
+-- -- -- -- -- --         item_brand as 2nd_item_fav_brand
+-- -- -- -- -- --     from 
+-- -- -- -- -- --         base a 
+-- -- -- -- -- --     where 
+-- -- -- -- -- --         exists (select 1 from Users b 
+-- -- -- -- -- --                 where a.seller_id = b.user_id and a.item_brand = b.favorite_brand 
+-- -- -- -- -- --                 and a.order_sequence = 2)
+-- -- -- -- -- -- )
+-- -- -- -- -- -- select 
+-- -- -- -- -- --     a.user_id as seller_id,
+-- -- -- -- -- --     if(b.2nd_item_fav_brand is not null,'yes','no') as 2nd_item_fav_brand
+-- -- -- -- -- -- from 
+-- -- -- -- -- --     Users a 
+-- -- -- -- -- -- left join 
+-- -- -- -- -- --     fav_brand_info b 
+-- -- -- -- -- -- on 
+-- -- -- -- -- --     a.user_id = b.seller_id 
+-- -- -- -- -- with base as (
+-- -- -- -- --     select 
+-- -- -- -- --         a.order_date,
+-- -- -- -- --         a.item_id,
+-- -- -- -- --         b.item_brand,
+-- -- -- -- --         a.seller_id,
+-- -- -- -- --         row_number() over (partition by a.seller_id order by a.order_date) as rnums
+-- -- -- -- --     from 
+-- -- -- -- --         Orders a 
+-- -- -- -- --     inner join 
+-- -- -- -- --         Items b 
+-- -- -- -- --     on 
+-- -- -- -- --         a.item_id = b.item_id
+-- -- -- -- -- ),
+-- -- -- -- -- is_second_cte as (
+-- -- -- -- --     select 
+-- -- -- -- --         seller_id,
+-- -- -- -- --         item_brand
+-- -- -- -- --     from 
+-- -- -- -- --         base a 
+-- -- -- -- --     where 
+-- -- -- -- --         exists 
+-- -- -- -- --             (select 1 from Users b 
+-- -- -- -- --                 where a.seller_id = b.user_id and a.rnums = 2 and a.item_brand = b.favorite_brand)
+-- -- -- -- -- ) 
+-- -- -- -- -- select 
+-- -- -- -- --     a.user_id as seller_id,
+-- -- -- -- --     if(b.item_brand is null,'no','yes') as 2nd_item_fav_brand
+-- -- -- -- -- from 
+-- -- -- -- --     Users a 
+-- -- -- -- -- left join
+-- -- -- -- --     is_second_cte b
+-- -- -- -- -- on 
+-- -- -- -- --     a.user_id = b.seller_id 
+-- -- -- -- with base as (
+-- -- -- --     select 
+-- -- -- --         a.order_date,
+-- -- -- --         dense_rank() over (partition by a.seller_id order by a.order_date) as ranks,
+-- -- -- --         a.seller_id,
+-- -- -- --         b.item_brand
+-- -- -- --     from 
+-- -- -- --         Orders a 
+-- -- -- --     inner join 
+-- -- -- --         Items b 
+-- -- -- --     on 
+-- -- -- --         a.item_id = b.item_id
+-- -- -- -- ),
+-- -- -- -- fav_brand as (
+-- -- -- --     select 
+-- -- -- --         seller_id,
+-- -- -- --         item_brand
+-- -- -- --     from 
+-- -- -- --         base a 
+-- -- -- --     where exists
+-- -- -- --         (select 1 from Users b 
+-- -- -- --             where a.seller_id = b.user_id and a.ranks = 2 and a.item_brand = b.favorite_brand)
+-- -- -- -- )
+-- -- -- -- select 
+-- -- -- --     a.user_id as seller_id,
+-- -- -- --     if(b.item_brand is not null,'yes','no') as 2nd_item_fav_brand
+-- -- -- -- from  
+-- -- -- --     Users a 
+-- -- -- -- left join 
+-- -- -- --     fav_brand b 
+-- -- -- -- on 
+-- -- -- --     a.user_id = b.seller_id
+-- -- -- with base as (
+-- -- --     select 
+-- -- --         a.order_id,
+-- -- --         a.order_date,
+-- -- --         row_number() over (partition by a.seller_id order by a.order_date) as rnums,
+-- -- --         b.item_brand,
+-- -- --         a.seller_id
+-- -- --     from 
+-- -- --         Orders a 
+-- -- --     inner join 
+-- -- --         Items b 
+-- -- --     on 
+-- -- --         a.item_id = b.item_id 
+-- -- -- ),
+-- -- -- final_info as (
+-- -- --     select 
+-- -- --         seller_id,
+-- -- --         item_brand
+-- -- --     from 
+-- -- --         base a 
+-- -- --     where exists
+-- -- --         (select 1 from Users b
+-- -- --             where a.seller_id = b.user_id and a.item_brand = b.favorite_brand and a.rnums = 2)
+-- -- -- )
+-- -- -- select 
+-- -- --     distinct
+-- -- --     a.user_id as seller_id,
+-- -- --     if(b.item_brand is null,'no','yes') as 2nd_item_fav_brand
+-- -- -- from 
+-- -- --     Users a 
+-- -- -- left join 
+-- -- --     final_info b 
+-- -- -- on 
+-- -- --     a.user_id = b.seller_id 
+-- -- with base as (
+-- --     select 
+-- --         a.order_date,
+-- --         a.seller_id,
+-- --         b.item_brand,
+-- --         dense_rank() over (partition by a.seller_id order by a.order_date) as rnums
+-- --     from 
+-- --         Orders a 
+-- --     inner join 
+-- --         Items b 
+-- --     on 
+-- --         a.item_id = b.item_id 
+-- -- ),
+-- -- final_info as (
+-- --     select
+-- --         seller_id,
+-- --         item_brand as 2nd_item_fav_brand
+-- --     from 
+-- --         base a
+-- --     where exists
+-- --         (select 1 from Users b 
+-- --             where a.seller_id = b.user_id and a.rnums = 2 and b.favorite_brand = a.item_brand)
+-- -- )
+-- -- select 
+-- --     a.user_id as seller_id,
+-- --     if(b.2nd_item_fav_brand is null,'no','yes') as 2nd_item_fav_brand
+-- -- from 
+-- --     Users a 
+-- -- left join 
+-- --     final_info b 
+-- -- on 
+-- --     a.user_id = b.seller_id and a.favorite_brand = b.2nd_item_fav_brand
+
+-- with base as (
+--     select 
+--         a.seller_id,
+--         a.order_date,
+--         b.item_brand,
+--         row_number() over (partition by a.seller_id order by a.order_date) as rnums
+--     from 
+--         Orders a 
+--     inner join 
+--         Items b 
+--     on 
+--         a.item_id = b.item_id
+-- ),
+-- final_info as (
+--     select 
+--         seller_id,
+--         item_brand
+--     from 
+--         base a 
+--     where exists 
+--         (select 1 from Users u
+--             where a.seller_id = u.user_id and a.item_brand = u.favorite_brand and a.rnums = 2)
+-- )
+-- select 
+--     a.user_id as seller_id,
+--     if(b.item_brand is null,'no','yes') as 2nd_item_fav_brand
+-- from 
+--     Users a 
+-- left join 
+--     final_info b 
+-- on 
+--     a.user_id = b.seller_id 
+with base as (
+    select 
+        a.seller_id,
+        b.item_brand,
+        row_number() over (partition by a.seller_id order by a.order_date) as rnums
+    from 
+        Orders a 
+    inner join 
+        Items b 
+    on 
+        a.item_id = b.item_id
+),
+final_info as (
+    select 
+        seller_id,
+        item_brand
+    from 
+        base a 
+    where exists 
+        (select 1 from Users b 
+            where a.seller_id = b.user_id and a.rnums = 2 and a.item_brand = b.favorite_brand)
+)
+select 
+    a.user_id as seller_id,
+    if(b.item_brand is null, 'no','yes') as 2nd_item_fav_brand
+from 
+    Users a 
+left join 
+    final_info b 
+on 
+    a.user_id = b.seller_id 
+    
