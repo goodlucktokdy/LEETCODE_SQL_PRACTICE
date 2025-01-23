@@ -1,0 +1,735 @@
+-- -- -- -- -- -- -- -- -- -- # Write your MySQL query statement below
+-- -- -- -- -- -- -- -- -- -- with recursive cte as (
+-- -- -- -- -- -- -- -- -- --     select 
+-- -- -- -- -- -- -- -- -- --         date('2020-02-01') as month
+-- -- -- -- -- -- -- -- -- --     union all
+-- -- -- -- -- -- -- -- -- --     select 
+-- -- -- -- -- -- -- -- -- --         cte.month + interval 1 month
+-- -- -- -- -- -- -- -- -- --     from 
+-- -- -- -- -- -- -- -- -- --         cte
+-- -- -- -- -- -- -- -- -- --     where 
+-- -- -- -- -- -- -- -- -- --         cte.month < '2021-01-01'
+-- -- -- -- -- -- -- -- -- -- ),
+-- -- -- -- -- -- -- -- -- -- new_base as (
+-- -- -- -- -- -- -- -- -- --     select 
+-- -- -- -- -- -- -- -- -- --         month - interval 1 day as new_month
+-- -- -- -- -- -- -- -- -- --     from 
+-- -- -- -- -- -- -- -- -- --         cte
+-- -- -- -- -- -- -- -- -- -- ),
+-- -- -- -- -- -- -- -- -- -- accepted_rides_cte as (
+-- -- -- -- -- -- -- -- -- --     select 
+-- -- -- -- -- -- -- -- -- --         new_month,
+-- -- -- -- -- -- -- -- -- --         count(distinct ride_id) as accepted_rides
+-- -- -- -- -- -- -- -- -- --     from (
+-- -- -- -- -- -- -- -- -- --         select 
+-- -- -- -- -- -- -- -- -- --             c.ride_id,
+-- -- -- -- -- -- -- -- -- --             c.driver_id,
+-- -- -- -- -- -- -- -- -- --             a.new_month
+-- -- -- -- -- -- -- -- -- --         from
+-- -- -- -- -- -- -- -- -- --             new_base a
+-- -- -- -- -- -- -- -- -- --         left join 
+-- -- -- -- -- -- -- -- -- --             Rides b
+-- -- -- -- -- -- -- -- -- --         on 
+-- -- -- -- -- -- -- -- -- --             month(a.new_month) = month(b.requested_at) and year(b.requested_at) = 2020
+-- -- -- -- -- -- -- -- -- --         left join 
+-- -- -- -- -- -- -- -- -- --             AcceptedRides c
+-- -- -- -- -- -- -- -- -- --         on 
+-- -- -- -- -- -- -- -- -- --             b.ride_id = c.ride_id
+-- -- -- -- -- -- -- -- -- --     ) a
+-- -- -- -- -- -- -- -- -- --     group by 
+-- -- -- -- -- -- -- -- -- --         1
+-- -- -- -- -- -- -- -- -- -- ),
+-- -- -- -- -- -- -- -- -- -- new_drivers as (
+-- -- -- -- -- -- -- -- -- --     select 
+-- -- -- -- -- -- -- -- -- --         driver_id,
+-- -- -- -- -- -- -- -- -- --         case when year(join_date) <= 2019 then '2020-01-01' else join_date end as join_date
+-- -- -- -- -- -- -- -- -- --     from 
+-- -- -- -- -- -- -- -- -- --         Drivers
+-- -- -- -- -- -- -- -- -- -- ),
+-- -- -- -- -- -- -- -- -- -- final_info as (
+-- -- -- -- -- -- -- -- -- --     select 
+-- -- -- -- -- -- -- -- -- --         a.new_month,
+-- -- -- -- -- -- -- -- -- --         case when b.driver_id is not null then 1 else 0 end as driver_id,
+-- -- -- -- -- -- -- -- -- --         b.join_date
+-- -- -- -- -- -- -- -- -- --     from 
+-- -- -- -- -- -- -- -- -- --         new_base a 
+-- -- -- -- -- -- -- -- -- --     left join 
+-- -- -- -- -- -- -- -- -- --         new_drivers b
+-- -- -- -- -- -- -- -- -- --     on 
+-- -- -- -- -- -- -- -- -- --         a.new_month >= b.join_date and year(b.join_date) = 2020 and month(a.new_month) = month(b.join_date)
+-- -- -- -- -- -- -- -- -- -- )
+-- -- -- -- -- -- -- -- -- -- select 
+-- -- -- -- -- -- -- -- -- --     distinct
+-- -- -- -- -- -- -- -- -- --     month(a.new_month) as month,
+-- -- -- -- -- -- -- -- -- --     sum(b.driver_id) over (order by a.new_month) as active_drivers,
+-- -- -- -- -- -- -- -- -- --     a.accepted_rides
+-- -- -- -- -- -- -- -- -- -- from 
+-- -- -- -- -- -- -- -- -- --     accepted_rides_cte a 
+-- -- -- -- -- -- -- -- -- -- inner join 
+-- -- -- -- -- -- -- -- -- --     final_info b 
+-- -- -- -- -- -- -- -- -- -- on 
+-- -- -- -- -- -- -- -- -- --     month(a.new_month) = month(b.new_month)
+-- -- -- -- -- -- -- -- -- with recursive cte as (
+-- -- -- -- -- -- -- -- --     select 
+-- -- -- -- -- -- -- -- --         1 as month
+-- -- -- -- -- -- -- -- --     union all
+-- -- -- -- -- -- -- -- --     select 
+-- -- -- -- -- -- -- -- --         cte.month + 1 
+-- -- -- -- -- -- -- -- --     from 
+-- -- -- -- -- -- -- -- --         cte
+-- -- -- -- -- -- -- -- --     where 
+-- -- -- -- -- -- -- -- --         cte.month < 12
+-- -- -- -- -- -- -- -- -- ),
+-- -- -- -- -- -- -- -- -- base as (
+-- -- -- -- -- -- -- -- --     select 
+-- -- -- -- -- -- -- -- --         a.month,
+-- -- -- -- -- -- -- -- --         b.driver_cnts,
+-- -- -- -- -- -- -- -- --         sum(case when b.driver_cnts is null then 0 else b.driver_cnts end) over (order by a.month) as active_drivers
+-- -- -- -- -- -- -- -- --     from cte a 
+-- -- -- -- -- -- -- -- --     left join
+-- -- -- -- -- -- -- -- --         (
+-- -- -- -- -- -- -- -- --         select 
+-- -- -- -- -- -- -- -- --             month(case when year(join_date) <= 2019 then '2020-01-01' else join_date end) as month,
+-- -- -- -- -- -- -- -- --             count(distinct driver_id) as driver_cnts
+-- -- -- -- -- -- -- -- --         from 
+-- -- -- -- -- -- -- -- --             Drivers
+-- -- -- -- -- -- -- -- --         where 
+-- -- -- -- -- -- -- -- --             year(join_date) <= 2020
+-- -- -- -- -- -- -- -- --         group by 
+-- -- -- -- -- -- -- -- --             month
+-- -- -- -- -- -- -- -- --     ) b
+-- -- -- -- -- -- -- -- --     on 
+-- -- -- -- -- -- -- -- --         a.month = b.month
+-- -- -- -- -- -- -- -- -- ),
+-- -- -- -- -- -- -- -- -- accepted_rides as (
+-- -- -- -- -- -- -- -- --     select 
+-- -- -- -- -- -- -- -- --         month(a.requested_at) as month,
+-- -- -- -- -- -- -- -- --         count(distinct b.ride_id) as cnts
+-- -- -- -- -- -- -- -- --     from 
+-- -- -- -- -- -- -- -- --         Rides a 
+-- -- -- -- -- -- -- -- --     left join 
+-- -- -- -- -- -- -- -- --         AcceptedRides b
+-- -- -- -- -- -- -- -- --     on 
+-- -- -- -- -- -- -- -- --         a.ride_id = b.ride_id
+-- -- -- -- -- -- -- -- --     where 
+-- -- -- -- -- -- -- -- --         year(a.requested_at) = 2020
+-- -- -- -- -- -- -- -- --     group by 
+-- -- -- -- -- -- -- -- --         month
+-- -- -- -- -- -- -- -- -- )
+-- -- -- -- -- -- -- -- -- select 
+-- -- -- -- -- -- -- -- --     a.month,
+-- -- -- -- -- -- -- -- --     b.active_drivers as active_drivers,
+-- -- -- -- -- -- -- -- --     ifnull(c.cnts,0) as accepted_rides
+-- -- -- -- -- -- -- -- -- from 
+-- -- -- -- -- -- -- -- --     cte a 
+-- -- -- -- -- -- -- -- -- left join 
+-- -- -- -- -- -- -- -- --     base b 
+-- -- -- -- -- -- -- -- -- on
+-- -- -- -- -- -- -- -- --     a.month = b.month
+-- -- -- -- -- -- -- -- -- left join 
+-- -- -- -- -- -- -- -- --     accepted_rides c
+-- -- -- -- -- -- -- -- -- on
+-- -- -- -- -- -- -- -- --     a.month = c.month
+-- -- -- -- -- -- -- -- -- order by 
+-- -- -- -- -- -- -- -- --     month asc
+
+-- -- -- -- -- -- -- -- with recursive cte as (
+-- -- -- -- -- -- -- --     select 
+-- -- -- -- -- -- -- --         1 as month
+-- -- -- -- -- -- -- --     union all
+-- -- -- -- -- -- -- --     select 
+-- -- -- -- -- -- -- --         cte.month + 1
+-- -- -- -- -- -- -- --     from 
+-- -- -- -- -- -- -- --         cte
+-- -- -- -- -- -- -- --     where 
+-- -- -- -- -- -- -- --         cte.month < 12
+-- -- -- -- -- -- -- -- ),
+-- -- -- -- -- -- -- -- actives as (
+-- -- -- -- -- -- -- --     select 
+-- -- -- -- -- -- -- --         months,
+-- -- -- -- -- -- -- --         count(distinct driver_id) as active_drivers
+-- -- -- -- -- -- -- --     from (
+-- -- -- -- -- -- -- --         select 
+-- -- -- -- -- -- -- --             driver_id,
+-- -- -- -- -- -- -- --             month(case when join_date < '2020-01-01' then '2020-01-01' else join_date end) as months
+-- -- -- -- -- -- -- --         from 
+-- -- -- -- -- -- -- --             Drivers
+-- -- -- -- -- -- -- --         where 
+-- -- -- -- -- -- -- --             join_date < '2021-01-01'
+-- -- -- -- -- -- -- --     ) a
+-- -- -- -- -- -- -- --     group by 
+-- -- -- -- -- -- -- --         months
+-- -- -- -- -- -- -- -- ),
+-- -- -- -- -- -- -- -- accepted as (
+-- -- -- -- -- -- -- --     select 
+-- -- -- -- -- -- -- --         month(a.requested_at) as months,
+-- -- -- -- -- -- -- --         count(distinct b.ride_id) as accepted_rides
+-- -- -- -- -- -- -- --     from 
+-- -- -- -- -- -- -- --         Rides a 
+-- -- -- -- -- -- -- --     left join 
+-- -- -- -- -- -- -- --         AcceptedRides b
+-- -- -- -- -- -- -- --     on 
+-- -- -- -- -- -- -- --         a.ride_id = b.ride_id
+-- -- -- -- -- -- -- --     where 
+-- -- -- -- -- -- -- --         a.requested_at between '2020-01-01' and '2020-12-31'
+-- -- -- -- -- -- -- --     group by 
+-- -- -- -- -- -- -- --         months
+-- -- -- -- -- -- -- -- )
+-- -- -- -- -- -- -- -- select 
+-- -- -- -- -- -- -- --     a.month,
+-- -- -- -- -- -- -- --     sum(ifnull(b.active_drivers,0)) over (order by a.month) as active_drivers,
+-- -- -- -- -- -- -- --     ifnull(c.accepted_rides,0) as accepted_rides
+-- -- -- -- -- -- -- -- from 
+-- -- -- -- -- -- -- --     cte a 
+-- -- -- -- -- -- -- -- left join 
+-- -- -- -- -- -- -- --     actives b 
+-- -- -- -- -- -- -- -- on 
+-- -- -- -- -- -- -- --     a.month = b.months
+-- -- -- -- -- -- -- -- left join 
+-- -- -- -- -- -- -- --     accepted c 
+-- -- -- -- -- -- -- -- on
+-- -- -- -- -- -- -- --     a.month = c.months
+-- -- -- -- -- -- -- -- order by 
+-- -- -- -- -- -- -- --     a.month asc
+
+
+-- -- -- -- -- -- -- with recursive cte as (
+-- -- -- -- -- -- --     select 
+-- -- -- -- -- -- --         1 as month
+-- -- -- -- -- -- --     union all
+-- -- -- -- -- -- --     select 
+-- -- -- -- -- -- --         cte.month + 1
+-- -- -- -- -- -- --     from 
+-- -- -- -- -- -- --         cte 
+-- -- -- -- -- -- --     where 
+-- -- -- -- -- -- --         cte.month < 12
+-- -- -- -- -- -- -- ),
+-- -- -- -- -- -- -- actives as (
+-- -- -- -- -- -- --     select 
+-- -- -- -- -- -- --         a.month,
+-- -- -- -- -- -- --         sum(ifnull(b.active_drivers,0)) over (order by a.month) as active_drivers
+-- -- -- -- -- -- --     from 
+-- -- -- -- -- -- --         cte a
+-- -- -- -- -- -- --     left join 
+-- -- -- -- -- -- --         (
+-- -- -- -- -- -- --         select 
+-- -- -- -- -- -- --             month(case when year(join_date) < 2020 then '2020-01-01' else join_date end) as month,
+-- -- -- -- -- -- --             count(distinct driver_id) as active_drivers
+-- -- -- -- -- -- --         from 
+-- -- -- -- -- -- --             Drivers
+-- -- -- -- -- -- --         where 
+-- -- -- -- -- -- --             year(join_date) <= 2020
+-- -- -- -- -- -- --         group by 
+-- -- -- -- -- -- --             month
+-- -- -- -- -- -- --     ) b
+-- -- -- -- -- -- --     on
+-- -- -- -- -- -- --         a.month = b.month
+-- -- -- -- -- -- -- ),
+-- -- -- -- -- -- -- accepted as (
+-- -- -- -- -- -- --     select 
+-- -- -- -- -- -- --         a.month,
+-- -- -- -- -- -- --         count(distinct b.ride_id) as accepted_rides
+-- -- -- -- -- -- --     from cte a 
+-- -- -- -- -- -- --     left join 
+-- -- -- -- -- -- --         (
+-- -- -- -- -- -- --         select 
+-- -- -- -- -- -- --             month(a.requested_at) as month,
+-- -- -- -- -- -- --             b.ride_id
+-- -- -- -- -- -- --         from 
+-- -- -- -- -- -- --             Rides a 
+-- -- -- -- -- -- --         left join 
+-- -- -- -- -- -- --             AcceptedRides b 
+-- -- -- -- -- -- --         on 
+-- -- -- -- -- -- --             a.ride_id = b.ride_id
+-- -- -- -- -- -- --         where 
+-- -- -- -- -- -- --             year(a.requested_at) = 2020
+-- -- -- -- -- -- --     ) b
+-- -- -- -- -- -- --     on
+-- -- -- -- -- -- --         a.month = b.month
+-- -- -- -- -- -- --     group by 
+-- -- -- -- -- -- --         month
+-- -- -- -- -- -- -- )
+-- -- -- -- -- -- -- select 
+-- -- -- -- -- -- --     a.month,
+-- -- -- -- -- -- --     a.active_drivers,
+-- -- -- -- -- -- --     b.accepted_rides
+-- -- -- -- -- -- -- from 
+-- -- -- -- -- -- --     actives a 
+-- -- -- -- -- -- -- inner join 
+-- -- -- -- -- -- --     accepted b 
+-- -- -- -- -- -- -- on 
+-- -- -- -- -- -- --     a.month = b.month
+-- -- -- -- -- -- -- order by 
+-- -- -- -- -- -- --     a.month
+
+-- -- -- -- -- -- with recursive cte as (
+-- -- -- -- -- --     select 
+-- -- -- -- -- --         1 as month
+-- -- -- -- -- --     union all
+-- -- -- -- -- --     select 
+-- -- -- -- -- --         cte.month + 1
+-- -- -- -- -- --     from 
+-- -- -- -- -- --         cte 
+-- -- -- -- -- --     where 
+-- -- -- -- -- --         cte.month < 12
+-- -- -- -- -- -- ),
+-- -- -- -- -- -- availables as (
+-- -- -- -- -- --     select 
+-- -- -- -- -- --         a.month as month,
+-- -- -- -- -- --         sum(ifnull(b.available_drivers,0)) over (order by a.month) as available_drivers
+-- -- -- -- -- --     from 
+-- -- -- -- -- --         cte a 
+-- -- -- -- -- --     left join (
+-- -- -- -- -- --         select 
+-- -- -- -- -- --             month(case when join_date < '2020-01-01' then '2020-01-01' else join_date end) as month,
+-- -- -- -- -- --             count(distinct driver_id) as available_drivers
+-- -- -- -- -- --         from 
+-- -- -- -- -- --             Drivers 
+-- -- -- -- -- --         where 
+-- -- -- -- -- --             year(join_date) <= 2020
+-- -- -- -- -- --         group by 
+-- -- -- -- -- --             month
+-- -- -- -- -- --     ) b
+-- -- -- -- -- --     on
+-- -- -- -- -- --         a.month = b.month
+-- -- -- -- -- -- ),
+-- -- -- -- -- -- accepted as (
+-- -- -- -- -- --     select 
+-- -- -- -- -- --         a.month as month,
+-- -- -- -- -- --         ifnull(b.accepted_rides,0) as accepted_rides
+-- -- -- -- -- --     from
+-- -- -- -- -- --         cte a
+-- -- -- -- -- --     left join (
+-- -- -- -- -- --         select 
+-- -- -- -- -- --             month(r.requested_at) as month,
+-- -- -- -- -- --             count(distinct a.ride_id) as accepted_rides
+-- -- -- -- -- --         from 
+-- -- -- -- -- --             AcceptedRides a 
+-- -- -- -- -- --         inner join 
+-- -- -- -- -- --             Rides r
+-- -- -- -- -- --         on 
+-- -- -- -- -- --             a.ride_id = r.ride_id
+-- -- -- -- -- --         where 
+-- -- -- -- -- --             year(r.requested_at) = 2020
+-- -- -- -- -- --         group by 
+-- -- -- -- -- --             month
+-- -- -- -- -- --     ) b
+-- -- -- -- -- --     on 
+-- -- -- -- -- --         a.month = b.month
+-- -- -- -- -- -- )
+-- -- -- -- -- -- select 
+-- -- -- -- -- --     a.month as month,
+-- -- -- -- -- --     a.available_drivers as active_drivers,
+-- -- -- -- -- --     b.accepted_rides as accepted_rides
+-- -- -- -- -- -- from 
+-- -- -- -- -- --     availables a 
+-- -- -- -- -- -- inner join 
+-- -- -- -- -- --     accepted b 
+-- -- -- -- -- -- on 
+-- -- -- -- -- --     a.month = b.month
+-- -- -- -- -- -- order by 
+-- -- -- -- -- --     month
+-- -- -- -- -- with recursive month_cte as (
+-- -- -- -- --     select 
+-- -- -- -- --         1 as month
+-- -- -- -- --     union all
+-- -- -- -- --     select 
+-- -- -- -- --         month_cte.month + 1
+-- -- -- -- --     from 
+-- -- -- -- --         month_cte
+-- -- -- -- --     where 
+-- -- -- -- --         month_cte.month < 12 
+-- -- -- -- -- ),
+-- -- -- -- -- available_drivers_cte as (
+-- -- -- -- --     select 
+-- -- -- -- --         a.month,
+-- -- -- -- --         sum(ifnull(b.cnts,0)) over (order by a.month) as available_drivers
+-- -- -- -- --     from 
+-- -- -- -- --         month_cte a
+-- -- -- -- --     left join (
+-- -- -- -- --         select 
+-- -- -- -- --             month(case when year(join_date) <= 2019 then '2020-01-01' else join_date end) as month,
+-- -- -- -- --             count(distinct driver_id) as cnts
+-- -- -- -- --         from 
+-- -- -- -- --             Drivers
+-- -- -- -- --         where 
+-- -- -- -- --             year(join_date) <= 2020
+-- -- -- -- --         group by 
+-- -- -- -- --             month
+-- -- -- -- --     ) b
+-- -- -- -- --     on 
+-- -- -- -- --         a.month = b.month
+-- -- -- -- -- ),
+-- -- -- -- -- accepted_rides_cte as (
+-- -- -- -- --     select 
+-- -- -- -- --         a.month,
+-- -- -- -- --         ifnull(b.accepted_rides,0) as accepted_rides
+-- -- -- -- --     from 
+-- -- -- -- --         month_cte a 
+-- -- -- -- --     left join (
+-- -- -- -- --         select 
+-- -- -- -- --             month(a.requested_at) as month,
+-- -- -- -- --             count(distinct b.ride_id) as accepted_rides
+-- -- -- -- --         from 
+-- -- -- -- --             Rides a
+-- -- -- -- --         inner join 
+-- -- -- -- --             AcceptedRides b 
+-- -- -- -- --         on 
+-- -- -- -- --             a.ride_id = b.ride_id
+-- -- -- -- --         where 
+-- -- -- -- --             year(a.requested_at) = 2020
+-- -- -- -- --         group by 
+-- -- -- -- --             month
+-- -- -- -- --     ) b
+-- -- -- -- --     on
+-- -- -- -- --         a.month = b.month
+-- -- -- -- -- )
+-- -- -- -- -- select 
+-- -- -- -- --     a.month,
+-- -- -- -- --     a.available_drivers as active_drivers,
+-- -- -- -- --     b.accepted_rides
+-- -- -- -- -- from 
+-- -- -- -- --     available_drivers_cte a 
+-- -- -- -- -- inner join 
+-- -- -- -- --     accepted_rides_cte b 
+-- -- -- -- -- on 
+-- -- -- -- --     a.month = b.month 
+-- -- -- -- -- order by 
+-- -- -- -- --     a.month 
+-- -- -- -- with recursive cte as (
+-- -- -- --     select 
+-- -- -- --         1 as month
+-- -- -- --     union all
+-- -- -- --     select 
+-- -- -- --         cte.month + 1
+-- -- -- --     from 
+-- -- -- --         cte 
+-- -- -- --     where 
+-- -- -- --         cte.month < 12
+-- -- -- -- ),
+-- -- -- -- active_drivers_cte as (
+-- -- -- --     select 
+-- -- -- --         a.month,
+-- -- -- --         sum(ifnull(b.active_drivers,0)) over (order by a.month) as active_drivers
+-- -- -- --     from 
+-- -- -- --         cte a 
+-- -- -- --     left join (
+-- -- -- --         select 
+-- -- -- --             month(case when join_date < '2020-01-01' then '2020-01-01' else join_date end) as month,
+-- -- -- --             count(distinct driver_id) as active_drivers
+-- -- -- --         from 
+-- -- -- --             Drivers
+-- -- -- --         where 
+-- -- -- --             year(join_date) <= 2020 
+-- -- -- --         group by 
+-- -- -- --             month
+-- -- -- --     ) b
+-- -- -- --     on 
+-- -- -- --         a.month = b.month 
+-- -- -- -- ),
+-- -- -- -- accepted_rides_cte as (
+-- -- -- --     select 
+-- -- -- --         a.month as month,
+-- -- -- --         ifnull(b.accepted_rides,0) as accepted_rides
+-- -- -- --     from 
+-- -- -- --         cte a 
+-- -- -- --     left join (
+-- -- -- --         select 
+-- -- -- --             month(a.requested_at) as month,
+-- -- -- --             count(distinct a.ride_id) as accepted_rides
+-- -- -- --         from 
+-- -- -- --             Rides a 
+-- -- -- --         inner join 
+-- -- -- --             AcceptedRides b 
+-- -- -- --         on 
+-- -- -- --             a.ride_id = b.ride_id 
+-- -- -- --         where 
+-- -- -- --             year(a.requested_at) = 2020
+-- -- -- --         group by 
+-- -- -- --             month 
+-- -- -- --     ) b 
+-- -- -- --     on
+-- -- -- --         a.month = b.month
+-- -- -- -- )
+-- -- -- -- select 
+-- -- -- --     a.month,
+-- -- -- --     a.active_drivers,
+-- -- -- --     b.accepted_rides
+-- -- -- -- from 
+-- -- -- --     active_drivers_cte a 
+-- -- -- -- inner join 
+-- -- -- --     accepted_rides_cte b 
+-- -- -- -- on 
+-- -- -- --     a.month = b.month 
+-- -- -- -- order by 
+-- -- -- --     a.month asc
+-- -- -- with recursive cte as (
+-- -- --     select 
+-- -- --         1 as month
+-- -- --     union all
+-- -- --     select 
+-- -- --         cte.month + 1 
+-- -- --     from 
+-- -- --         cte 
+-- -- --     where 
+-- -- --         cte.month < 12
+-- -- -- ),
+-- -- -- active_drivers_cte as (
+-- -- --     select 
+-- -- --         a.month,
+-- -- --         sum(coalesce(b.drivers,0)) over (order by a.month) as active_drivers
+-- -- --     from 
+-- -- --         cte a
+-- -- --     left join (
+-- -- --         select 
+-- -- --             month(case when join_date < '2020-01-01' then '2020-01-01' else join_date end) as month,
+-- -- --             count(distinct driver_id) as drivers
+-- -- --         from 
+-- -- --             Drivers 
+-- -- --         where 
+-- -- --             year(join_date) <= 2020
+-- -- --         group by 
+-- -- --             month
+-- -- --     ) b
+-- -- --     on
+-- -- --         a.month = b.month
+-- -- -- ),
+-- -- -- accepted_rides_cte as (
+-- -- --     select 
+-- -- --         a.month,
+-- -- --         coalesce(b.accepted_rides,0) as accepted_rides
+-- -- --     from 
+-- -- --         cte a 
+-- -- --     left join (
+-- -- --         select 
+-- -- --             month(a.requested_at) as month,
+-- -- --             count(distinct a.ride_id) as accepted_rides
+-- -- --         from 
+-- -- --             Rides a 
+-- -- --         inner join 
+-- -- --             AcceptedRides b 
+-- -- --         on 
+-- -- --             a.ride_id = b.ride_id 
+-- -- --         where 
+-- -- --             year(a.requested_at) = 2020
+-- -- --         group by 
+-- -- --             month
+-- -- --     ) b 
+-- -- --     on
+-- -- --         a.month = b.month
+-- -- -- )
+-- -- -- select 
+-- -- --     a.month as month,
+-- -- --     a.active_drivers as active_drivers,
+-- -- --     b.accepted_rides as accepted_rides
+-- -- -- from 
+-- -- --     active_drivers_cte a 
+-- -- -- inner join 
+-- -- --     accepted_rides_cte b 
+-- -- -- on 
+-- -- --     a.month = b.month 
+-- -- -- order by 
+-- -- --     a.month asc
+
+-- -- with recursive cte as (
+-- --     select 
+-- --         1 as month
+-- --     union all
+-- --     select 
+-- --         cte.month + 1 
+-- --     from 
+-- --         cte 
+-- --     where 
+-- --         cte.month < 12
+-- -- ),
+-- -- active_drivers_cte as (
+-- --     select 
+-- --         a.month,
+-- --         sum(coalesce(b.drivers,0)) over (order by a.month) as active_drivers
+-- --     from 
+-- --         cte a 
+-- --     left join (
+-- --         select 
+-- --             month(case when join_date < '2020-01-01' then '2020-01-01' else join_date end) as month,
+-- --             count(distinct driver_id) as drivers
+-- --         from 
+-- --             Drivers
+-- --         where 
+-- --             year(join_date) <= 2020
+-- --         group by 
+-- --             month
+-- --     ) b
+-- --     on 
+-- --         a.month = b.month
+-- -- ),
+-- -- accepted_rides_cte as (
+-- --     select 
+-- --         a.month,
+-- --         coalesce(b.accepted_rides,0) as accepted_rides
+-- --     from 
+-- --         cte a 
+-- --     left join (
+-- --         select 
+-- --             month(a.requested_at) as month,
+-- --             count(distinct a.ride_id) as accepted_rides
+-- --         from 
+-- --             Rides a 
+-- --         inner join 
+-- --             AcceptedRides b 
+-- --         on 
+-- --             a.ride_id = b.ride_id 
+-- --         where 
+-- --             year(a.requested_at) = 2020
+-- --         group by 
+-- --             month
+-- --     ) b
+-- --     on
+-- --         a.month = b.month 
+-- -- )
+-- -- select 
+-- --     a.month as month,
+-- --     a.active_drivers,
+-- --     b.accepted_rides
+-- -- from 
+-- --     active_drivers_cte a 
+-- -- inner join 
+-- --     accepted_rides_cte b 
+-- -- on 
+-- --     a.month = b.month 
+-- -- order by 
+-- --     month
+
+-- with recursive cte as (
+--     select 
+--         1 as month
+--     union all
+--     select 
+--         cte.month + 1 
+--     from 
+--         cte 
+--     where 
+--         cte.month < 12
+-- ),
+-- active_drivers_cte as (
+--     select 
+--         a.month,
+--         sum(coalesce(b.active_drivers,0)) over (order by a.month) as active_drivers
+--     from 
+--         cte a
+--     left join (
+--         select 
+--             month(case when join_date < '2020-01-01' then '2020-01-01' else join_date end) as month,
+--             count(distinct driver_id) as active_drivers
+--         from 
+--             Drivers 
+--         where 
+--             year(join_date) <= 2020
+--         group by 
+--             month
+--     ) b 
+--     on 
+--         a.month = b.month
+-- ),
+-- accepted_rides_cte as (
+--     select 
+--         a.month,
+--         coalesce(b.accepted_rides,0) as accepted_rides
+--     from 
+--         cte a 
+--     left join (
+--         select 
+--             month(a.requested_at) as month,
+--             count(distinct a.ride_id) as accepted_rides 
+--         from
+--             Rides a 
+--         inner join 
+--             AcceptedRides b 
+--         on 
+--             a.ride_id = b.ride_id 
+--         where 
+--             year(a.requested_at) = 2020
+--         group by 
+--             month
+--     ) b 
+--     on 
+--         a.month = b.month
+-- )
+-- select 
+--     a.month,
+--     b.active_drivers,
+--     a.accepted_rides
+-- from 
+--     accepted_rides_cte a 
+-- inner join 
+--     active_drivers_cte b 
+-- on 
+--     a.month = b.month 
+-- order by 
+--     month
+
+with recursive cte as (
+    select 
+        1 as month
+    union all
+    select 
+        cte.month + 1 
+    from 
+        cte 
+    where 
+        cte.month < 12
+),
+active_drivers_cte as (
+    select 
+        a.month as month,
+        sum(coalesce(b.drivers,0)) over (order by a.month) as active_drivers
+    from 
+        cte a 
+    left join (
+        select 
+            month(case when join_date < '2020-01-01' then '2020-01-01' else join_date end) as month,
+            count(distinct driver_id) as drivers
+        from 
+            Drivers
+        where 
+            year(join_date) <= 2020
+        group by 
+            month
+    ) b 
+    on 
+        a.month = b.month
+),
+accepted_rides_cte as (
+    select 
+        a.month as month,
+        coalesce(b.rides,0) as accepted_rides
+    from cte a
+    left join (
+        select 
+            month(a.requested_at) as month,
+            count(distinct b.ride_id) as rides
+        from 
+            Rides a 
+        inner join 
+            AcceptedRides b 
+        on 
+            a.ride_id = b.ride_id 
+        where 
+            year(a.requested_at) = 2020
+        group by 
+            month 
+    ) b
+    on
+        a.month = b.month
+)
+select 
+    a.month,
+    a.active_drivers,
+    b.accepted_rides
+from 
+    active_drivers_cte a 
+inner join 
+    accepted_rides_cte b 
+on 
+    a.month = b.month 
+order by 
+    a.month 
