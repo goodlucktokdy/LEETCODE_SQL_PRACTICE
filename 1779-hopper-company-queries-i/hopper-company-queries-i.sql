@@ -1,3 +1,4 @@
+# Write your MySQL query statement below
 with recursive cte as (
     select 
         1 as month
@@ -7,9 +8,9 @@ with recursive cte as (
     from 
         cte 
     where 
-        cte.month < 12 
+        cte.month < 12
 ),
-actives as (
+active_drivers_cte as (
     select 
         a.month as month,
         sum(coalesce(b.drivers,0)) over (order by a.month) as active_drivers
@@ -22,23 +23,23 @@ actives as (
         from 
             Drivers
         where 
-            year(join_date) <= 2020 
+            join_date <= '2020-12-31'
         group by 
             month
-    ) b
+    ) b 
     on 
         a.month = b.month
 ),
-accepts as (
+accepted_rides_cte as (
     select 
-        a.month,
-        coalesce(b.rides,0) as accepted_rides
+        a.month as month,
+        coalesce(b.accepted_rides,0) as accepted_rides
     from 
         cte a 
     left join (
         select 
-            month(date(a.requested_at)) as month,
-            count(distinct a.ride_id) as rides
+            month(a.requested_at) as month,
+            count(distinct b.ride_id) as accepted_rides
         from 
             Rides a 
         inner join 
@@ -50,18 +51,18 @@ accepts as (
         group by 
             month
     ) b 
-    on
-        a.month = b.month 
+    on 
+        a.month = b.month
 )
 select 
     a.month as month,
     a.active_drivers,
     b.accepted_rides
 from 
-    actives a 
+    active_drivers_cte a 
 inner join 
-    accepts b 
+    accepted_rides_cte b 
 on 
-    a.month = b.month 
+    a.month = b.month
 order by 
     month
