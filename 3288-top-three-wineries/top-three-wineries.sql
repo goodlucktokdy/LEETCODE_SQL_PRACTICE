@@ -1,9 +1,10 @@
-with winery_ranks as (
+# Write your MySQL query statement below
+with rank_info as (
     select 
         country,
         winery,
         total_points,
-        dense_rank() over (partition by country order by total_points desc, winery asc) as ranks
+        dense_rank() over (partition by country order by total_points desc, winery asc) as rnums
     from (
         select 
             country,
@@ -12,16 +13,16 @@ with winery_ranks as (
         from 
             Wineries
         group by 
-            country,winery
+            country, winery
     ) a 
 )
 select 
     country,
-    coalesce(max(case when ranks = 1 then concat(winery,' (',total_points,')') else null end),'No top winery') as top_winery,
-    coalesce(max(case when ranks = 2 then concat(winery,' (',total_points,')') else null end),'No second winery') as second_winery,
-    coalesce(max(case when ranks = 3 then concat(winery,' (',total_points,')') else null end),'No third winery') as third_winery
+    max(if(rnums = 1,concat(winery,' (',total_points,')'),null)) as top_winery,
+    coalesce(max(if(rnums = 2,concat(winery,' (',total_points,')'),null)),'No second winery') as second_winery,
+    coalesce(max(if(rnums = 3,concat(winery,' (',total_points,')'),null)),'No third winery') as third_winery
 from 
-    winery_ranks
+    rank_info 
 group by 
     country
 order by 
