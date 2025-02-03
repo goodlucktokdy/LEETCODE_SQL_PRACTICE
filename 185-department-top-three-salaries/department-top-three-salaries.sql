@@ -1,11 +1,7 @@
-select 
-    Department,
-    Employee,
-    Salary
-from (
+with base as (
     select 
-        b.name as Department,
-        a.name as Employee,
+        a.name as Department,
+        b.name as Employee,
         a.salary as Salary,
         dense_rank() over (partition by a.departmentId order by a.salary desc) as ranks
     from 
@@ -13,7 +9,13 @@ from (
     inner join 
         Department b 
     on 
-        a.departmentId = b.id
-) a
+        a.departmentId = b.id 
+)
+select 
+    Department,
+    Employee,
+    Salary
+from 
+    base 
 where 
     ranks <= 3
