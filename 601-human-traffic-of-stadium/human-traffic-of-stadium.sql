@@ -1,17 +1,17 @@
-
+# Write your MySQL query statement below
 with sess_info as (
     select 
         id,
         visit_date,
-        people,
         sess,
-        count(id) over (partition by sess) as sess_cnts
+        people,
+        count(id) over (partition by sess) as cnts
     from (
         select 
             id,
             visit_date,
             people,
-            id - cast(row_number() over (order by id) as real) as sess
+            cast(row_number() over (order by id) as real) - id as sess
         from 
             Stadium
         where 
@@ -25,6 +25,6 @@ select
 from 
     sess_info 
 where 
-    sess_cnts >= 3
+    cnts >= 3
 order by 
     visit_date
