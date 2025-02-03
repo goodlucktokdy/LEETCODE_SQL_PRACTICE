@@ -1,4 +1,18 @@
-with pairs as (
+# Write your MySQL query statement below
+with base as (
+    select 
+        a.day,
+        a.song_id,
+        a.user_id as user1,
+        b.user_id as user2
+    from 
+        Listens a 
+    inner join 
+        Listens b 
+    on 
+        a.day = b.day and a.song_id = b.song_id and a.user_id != b.user_id
+),
+pairs as (
     select 
         user1_id,
         user2_id
@@ -10,30 +24,17 @@ with pairs as (
         user1_id
     from 
         Friendship
-),
-base as (
-    select 
-        a.day,
-        a.song_id,
-        a.user_id as user1_id,
-        b.user_id as user2_id
-    from 
-        Listens a 
-    inner join 
-        Listens b 
-    on 
-        a.day = b.day and a.song_id = b.song_id and a.user_id != b.user_id
 )
 select 
-    distinct
-    user1_id as user_id,
-    user2_id as recommended_id
+    distinct 
+    user1 as user_id,
+    user2 as recommended_id
 from 
-    base a 
+    base a
 where not exists 
-    (select 1 from pairs b 
-        where a.user1_id = b.user1_id and a.user2_id = b.user2_id)
+    (select 1 from pairs b
+        where a.user1 = b.user1_id and a.user2 = b.user2_id)
 group by 
-    user_id,recommended_id,day
+    day, user1,user2
 having 
     count(distinct song_id) >= 3
