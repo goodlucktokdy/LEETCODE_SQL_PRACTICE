@@ -1,11 +1,13 @@
+# Write your MySQL query statement below
 with base as (
     select 
         invoice_id,
-        dense_rank() over (order by total_price desc,invoice_id asc) as ranks
+        sales,
+        dense_rank() over (order by sales desc, invoice_id asc) as ranks
     from (
         select 
-            a.invoice_id,
-            sum(a.quantity * b.price) as total_price
+            a.invoice_id as invoice_id,
+            sum(b.price * a.quantity) as sales 
         from 
             Purchases a 
         inner join 
@@ -13,18 +15,18 @@ with base as (
         on 
             a.product_id = b.product_id
         group by 
-            a.invoice_id
-    ) a 
+            invoice_id
+    ) a
 )
 select 
-    a.product_id,
-    a.quantity,
-    a.quantity * b.price as price
+    a.product_id as product_id,
+    b.quantity as quantity,
+    a.price * b.quantity as price
 from 
-    Purchases a 
+    Products a 
 inner join 
-    Products b 
+    Purchases b 
 on 
-    a.product_id = b.product_id 
+    a.product_id = b.product_id
 where 
-    a.invoice_id in (select invoice_id from base where ranks = 1)
+    b.invoice_id in (select invoice_id from base where ranks = 1)
