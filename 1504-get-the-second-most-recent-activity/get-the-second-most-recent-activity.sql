@@ -1,3 +1,4 @@
+# Write your MySQL query statement below
 select 
     distinct
     username,
@@ -10,19 +11,19 @@ from (
         activity,
         startDate,
         endDate,
-        dense_rank() over (partition by username order by endDate desc, startDate desc) as ranks
+        row_number() over (partition by username order by endDate desc, startDate desc) as rnums
     from 
         UserActivity
 ) a 
 where 
-    ranks = 2
+    rnums = 2
 union all
 select 
     username,
     activity,
     startDate,
     endDate
-from
+from 
     UserActivity 
 where 
     username in (select username from UserActivity group by username having count(*) = 1)
