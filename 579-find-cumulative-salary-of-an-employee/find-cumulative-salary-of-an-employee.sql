@@ -1,18 +1,18 @@
--- -- -- -- -- -- -- -- -- -- -- -- -- # Write your MySQL query statement below
+# Write your MySQL query statement below
 select 
     id,
     month,
-    sum(salary) over (partition by id order by month range between 2 preceding and 0 following) as Salary
+    sum(salary) over (partition by id order by month range between 2 preceding and 0 following) as salary
 from (
     select 
         id,
         month,
         salary,
-        row_number() over (partition by id order by month desc) as month_sequence
+        dense_rank() over (partition by id order by month desc) as month_ranks 
     from 
-        Employee
+        Employee 
 ) a 
 where 
-    month_sequence > 1
+    month_ranks > 1
 order by 
-    id asc, month desc 
+    id asc,month desc
