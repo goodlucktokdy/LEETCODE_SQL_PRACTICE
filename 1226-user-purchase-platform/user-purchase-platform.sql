@@ -1,4 +1,4 @@
-
+# Write your MySQL query statement below
 with base as (
     select 
         'mobile' as platform,
@@ -6,48 +6,54 @@ with base as (
     from 
         Spending
     union 
-    select  
-        'both',
+    select 
+        'both' as platform,
         spend_date
     from 
         Spending
-    union
+    union 
     select 
-        'desktop',
+        'desktop' as platform,
         spend_date
     from 
-        Spending        
+        Spending
 ),
-user_info as (
+platform_info as (
     select 
-        distinct 
         user_id,
         spend_date,
         case when platform_cnts = 2 then 'both' else platform end as platform,
-        sum(amount) as total_amount
+        amount
     from (
         select 
             user_id,
             spend_date,
             platform,
-            count(platform) over (partition by user_id, spend_date) as platform_cnts,
-            amount
+            amount,
+            count(platform) over (partition by spend_date,user_id) as platform_cnts
         from 
             Spending
-    ) a
-    group by 
-        1,2,3
+    ) a 
 )
 select 
-    a.spend_date as spend_date,
-    a.platform as platform,
+    a.spend_date,
+    a.platform,
     sum(coalesce(b.total_amount,0)) as total_amount,
     count(distinct b.user_id) as total_users
 from 
     base a 
-left join 
-    user_info b 
+left join (
+    select 
+        user_id,
+        spend_date,
+        platform,
+        sum(amount) as total_amount
+    from 
+        platform_info 
+    group by 
+        1,2,3
+) b
 on 
-    a.spend_date = b.spend_date and a.platform = b.platform
+    a.platform = b.platform and a.spend_date = b.spend_date
 group by 
-    spend_date, platform
+    1,2
