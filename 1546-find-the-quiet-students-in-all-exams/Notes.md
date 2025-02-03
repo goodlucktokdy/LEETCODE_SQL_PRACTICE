@@ -1,1 +1,1 @@
-<h2>find-the-quiet-students-in-all-exams Notes</h2><hr>[ Time taken: 6 m 5 s ]
+<h2>find-the-quiet-students-in-all-exams Notes</h2><hr>[ Time taken: 3 m 23 s ]
