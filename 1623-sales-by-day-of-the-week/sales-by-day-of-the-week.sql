@@ -1,8 +1,9 @@
-with base as (
+# Write your MySQL query statement below
+with sales_info as (
     select 
         a.item_category as Category,
         weekday(b.order_date) as days,
-        sum(coalesce(b.quantity,0)) as quantity 
+        sum(coalesce(b.quantity,0)) as quantity
     from 
         Items a 
     left join 
@@ -20,10 +21,10 @@ select
     max(case when days = 3 then quantity else 0 end) as Thursday,
     max(case when days = 4 then quantity else 0 end) as Friday,
     max(case when days = 5 then quantity else 0 end) as Saturday,
-    max(case when days = 6 then quantity else 0 end) as Sunday
+    max(case when days = 6 then quantity else 0 end) as Sunday 
 from 
-    base 
+    sales_info
 group by 
-    Category 
-order by 
     Category
+order by 
+    Category 
