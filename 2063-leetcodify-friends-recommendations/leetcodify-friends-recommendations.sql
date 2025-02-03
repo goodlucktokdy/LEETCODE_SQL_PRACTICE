@@ -31,9 +31,12 @@ select
     user2 as recommended_id
 from 
     base a
-where not exists 
-    (select 1 from pairs b
-        where a.user1 = b.user1_id and a.user2 = b.user2_id)
+left join 
+    pairs b 
+on 
+    a.user1 = b.user1_id and a.user2 = b.user2_id
+where 
+    b.user1_id is null
 group by 
     day, user1,user2
 having 
