@@ -1,9 +1,9 @@
-
-    
-with base as (
+# Write your MySQL query statement below
+with sales_info as (
     select 
-        a.seller_id,
+        a.order_date,
         b.item_brand,
+        a.seller_id,
         row_number() over (partition by a.seller_id order by a.order_date) as rnums
     from 
         Orders a 
@@ -13,19 +13,20 @@ with base as (
         a.item_id = b.item_id
 )
 select 
-    u.user_id as seller_id,
+    a.user_id as seller_id,
     if(b.item_brand is null,'no','yes') as 2nd_item_fav_brand
-from 
-    Users u
+from
+    Users a
 left join (
     select 
-        seller_id,
-        item_brand
+        order_date,
+        item_brand,
+        seller_id
     from 
-        base a 
+        sales_info a
     where exists 
-        (select 1 from Users u 
-            where a.seller_id = u.user_id and a.rnums = 2 and a.item_brand = u.favorite_brand)
+        (select 1 from Users b 
+            where a.seller_id = b.user_id and a.rnums = 2 and a.item_brand = b.favorite_brand)
 ) b 
-on
-    u.user_id = b.seller_id
+on 
+    a.user_id = b.seller_id
