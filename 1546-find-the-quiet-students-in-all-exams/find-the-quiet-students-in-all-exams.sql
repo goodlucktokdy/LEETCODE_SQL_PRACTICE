@@ -1,26 +1,27 @@
-with base as (
+# Write your MySQL query statement below
+with exam_info as (
     select 
-        a.exam_id,
+        b.exam_id,
         a.student_id,
-        b.student_name,
-        a.score,
-        dense_rank() over (partition by a.exam_id order by a.score desc) as high_score,
-        dense_rank() over (partition by a.exam_id order by a.score asc) as low_score
+        a.student_name,
+        b.score,
+        dense_rank() over (partition by b.exam_id order by b.score desc) as high_score,
+        dense_rank() over (partition by b.exam_id order by b.score asc) as low_score
     from 
-        Exam a 
+        Student a 
     inner join 
-        Student b 
+        Exam b 
     on 
         a.student_id = b.student_id
 )
 select 
-    distinct 
+    distinct
     student_id,
     student_name
 from 
-    base a
-where not exists
-    (select 1 from base b 
+    exam_info a 
+where not exists 
+    (select 1 from exam_info b 
         where a.student_id = b.student_id and (b.high_score = 1 or b.low_score = 1))
 order by 
-    student_id 
+    student_id asc 
