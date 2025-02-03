@@ -1,12 +1,8 @@
-select 
-    employee_id,
-    project_id,
-    employee_name,
-    project_workload
-from (
+# Write your MySQL query statement below
+with base as (
     select 
-        a.employee_id,
         a.project_id,
+        a.employee_id,
         b.name as employee_name,
         a.workload as project_workload,
         avg(a.workload) over (partition by b.team) as team_avg
@@ -16,7 +12,14 @@ from (
         Employees b 
     on 
         a.employee_id = b.employee_id
-) a 
+)
+select 
+    employee_id,
+    project_id,
+    employee_name,
+    project_workload
+from 
+    base 
 where 
     project_workload > team_avg 
 order by 
