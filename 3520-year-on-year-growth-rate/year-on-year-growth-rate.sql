@@ -1,3 +1,4 @@
+# Write your MySQL query statement below
 with base as (
     select 
         year,
@@ -13,7 +14,7 @@ with base as (
             user_transactions
         group by 
             year, product_id
-    ) a
+    ) b
 )
 select 
     year,
@@ -22,6 +23,6 @@ select
     prev_year_spend,
     round(100.0*(curr_year_spend - prev_year_spend)/prev_year_spend,2) as yoy_rate
 from 
-    base
+    base 
 order by 
-    product_id, year 
+    product_id, year
