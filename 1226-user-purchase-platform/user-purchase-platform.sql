@@ -1,47 +1,47 @@
 # Write your MySQL query statement below
-with base as (
+with recursive cte as (
     select 
-        'mobile' as platform,
-        spend_date
+        spend_date,
+        'both' as platform
     from 
         Spending
     union 
     select 
-        'both' as platform,
-        spend_date
+        spend_date,
+        'mobile' as platform
     from 
         Spending
     union 
     select 
-        'desktop' as platform,
-        spend_date
+        spend_date,
+        'desktop' as platform 
     from 
         Spending
 ),
-platform_info as (
+users_info as (
     select 
         user_id,
         spend_date,
-        case when platform_cnts = 2 then 'both' else platform end as platform,
+        case when cnts = 2 then 'both' else platform end as platform,
         amount
     from (
         select 
             user_id,
             spend_date,
             platform,
-            amount,
-            count(platform) over (partition by spend_date,user_id) as platform_cnts
+            count(platform) over (partition by user_id, spend_date) as cnts,
+            amount
         from 
             Spending
     ) a 
 )
 select 
-    a.spend_date,
-    a.platform,
+    a.spend_date as spend_date,
+    a.platform as platform,
     sum(coalesce(b.total_amount,0)) as total_amount,
     count(distinct b.user_id) as total_users
 from 
-    base a 
+    cte a 
 left join (
     select 
         user_id,
@@ -49,11 +49,11 @@ left join (
         platform,
         sum(amount) as total_amount
     from 
-        platform_info 
+        users_info
     group by 
-        1,2,3
+        user_id, spend_date, platform
 ) b
 on 
-    a.platform = b.platform and a.spend_date = b.spend_date
+    a.spend_date = b.spend_date and a.platform = b.platform
 group by 
-    1,2
+    spend_date, platform
