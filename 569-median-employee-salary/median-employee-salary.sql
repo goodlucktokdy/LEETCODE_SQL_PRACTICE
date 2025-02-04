@@ -1,3 +1,4 @@
+# Write your MySQL query statement below
 select 
     id,
     company,
@@ -7,10 +8,10 @@ from (
         id,
         company,
         salary,
-        count(id) over (partition by company) as cnts,
-        row_number() over (partition by company order by salary asc, id asc) as ranks
+        dense_rank() over (partition by company order by salary,id) as rnums,
+        count(id) over (partition by company) as cnts
     from 
         Employee
 ) a 
 where 
-    ranks between cnts/2 and cnts/2 + 1
+    rnums between cnts/2 and cnts/2 + 1
