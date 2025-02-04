@@ -1,1 +1,1 @@
-<h2>viewers-turned-streamers Notes</h2><hr>[ Time taken: 4 m 25 s ]
+<h2>viewers-turned-streamers Notes</h2><hr>[ Time taken: 2 m 30 s ]
