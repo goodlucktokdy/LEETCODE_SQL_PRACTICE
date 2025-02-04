@@ -1,5 +1,5 @@
 # Write your MySQL query statement below
-with base as (
+with sales_rank as (
     select 
         invoice_id,
         sales,
@@ -7,20 +7,20 @@ with base as (
     from (
         select 
             a.invoice_id as invoice_id,
-            sum(b.price * a.quantity) as sales 
+            sum(a.quantity * b.price) as sales
         from 
             Purchases a 
         inner join 
             Products b 
         on 
-            a.product_id = b.product_id
+            a.product_id = b.product_id 
         group by 
             invoice_id
-    ) a
+    ) a 
 )
 select 
-    a.product_id as product_id,
-    b.quantity as quantity,
+    a.product_id,
+    b.quantity,
     a.price * b.quantity as price
 from 
     Products a 
@@ -29,4 +29,4 @@ inner join
 on 
     a.product_id = b.product_id
 where 
-    b.invoice_id in (select invoice_id from base where ranks = 1)
+    b.invoice_id in (select invoice_id from sales_rank where ranks = 1)
