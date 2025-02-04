@@ -1,27 +1,22 @@
-with flight_info as (
+# Write your MySQL query statement below
+with booking_seq as (
     select 
-        flight_id,
-        passenger_id,
-        capacity,
-        if(capacity >= sequence,'Confirmed','Waitlist') as Status
-    from (
-        select 
-            a.flight_id,
-            b.passenger_id,
-            a.capacity,
-            row_number() over (partition by a.flight_id order by b.booking_time) as sequence
-        from 
-            Flights a 
-        inner join 
-            Passengers b 
-        on 
-            a.flight_id = b.flight_id
-    ) a
+        a.flight_id as flight_id,
+        b.passenger_id as passenger_id,
+        b.booking_time as booking_time,
+        a.capacity as capacity,
+        row_number() over (partition by a.flight_id order by b.booking_time asc) as rnums
+    from 
+        Flights a 
+    inner join 
+        Passengers b 
+    on 
+        a.flight_id = b.flight_id
 )
 select 
     passenger_id,
-    Status
+    case when capacity >= rnums then 'Confirmed' else 'Waitlist' end as Status
 from 
-    flight_info
+    booking_seq
 order by 
-    passenger_id asc 
+    passenger_id
