@@ -1,14 +1,14 @@
 # Write your MySQL query statement below
-with retained as (
+with install_info as (
     select 
         install_dt,
         count(distinct player_id) as installs,
-        count(distinct case when event_date = date_add(install_dt,interval 1 day) then player_id else null end) as retained_users
+        count(distinct case when date_add(install_dt,interval 1 day) = event_date then player_id else null end) as retention
     from (
-        select
+        select 
             player_id,
-            event_date,
-            min(event_date) over (partition by player_id) as install_dt
+            min(event_date) over (partition by player_id) as install_dt,
+            event_date
         from 
             Activity
     ) a 
@@ -18,6 +18,6 @@ with retained as (
 select 
     install_dt,
     installs,
-    round(retained_users/installs,2) as Day1_retention
+    round(retention/installs,2) as Day1_retention
 from 
-    retained
+    install_info 
