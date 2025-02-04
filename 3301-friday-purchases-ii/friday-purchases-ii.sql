@@ -4,7 +4,7 @@ with recursive cte as (
         '2023-11-01' as dates
     union all
     select 
-        date_add(cte.dates,interval 1 day) as dates
+        date_add(cte.dates, interval 1 day) as dates
     from 
         cte 
     where 
@@ -25,4 +25,4 @@ where
 group by 
     week_of_month, purchase_date
 order by 
-    week_of_month asc
+    week_of_month asc 
