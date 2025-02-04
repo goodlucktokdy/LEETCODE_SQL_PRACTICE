@@ -8,7 +8,7 @@ with recursive cte as (
     union all
     select 
         a.task_id,
-        cte.subtask_id + 1 
+        cte.subtask_id + 1
     from 
         Tasks a 
     inner join 
@@ -19,8 +19,8 @@ with recursive cte as (
         cte.subtask_id < a.subtasks_count
 )
 select 
-    a.task_id,
-    a.subtask_id
+    a.task_id as task_id,
+    a.subtask_id as subtask_id
 from 
     cte a 
 left join 
@@ -28,4 +28,4 @@ left join
 on 
     a.task_id = b.task_id and a.subtask_id = b.subtask_id
 where 
-    b.subtask_id is null 
+    b.task_id is null
