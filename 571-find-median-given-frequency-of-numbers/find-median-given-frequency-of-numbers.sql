@@ -1,20 +1,21 @@
+# Write your MySQL query statement below
 with recursive cte as (
     select 
         num,
-        1 as frequency
+        1 as frequency 
     from 
         Numbers
     union all
     select 
         a.num,
-        cte.frequency + 1
+        cte.frequency + 1 
     from 
-        Numbers a
+        Numbers a 
     inner join 
         cte 
     on 
         a.num = cte.num
-    and 
+    where 
         cte.frequency < a.frequency 
 )
 select 
@@ -22,9 +23,8 @@ select
 from (
     select 
         num,
-        frequency,
         row_number() over (order by num) as rnums,
-        count(num) over () as cnts 
+        count(num) over () as cnts
     from 
         cte
 ) a 
