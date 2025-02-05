@@ -1,7 +1,6 @@
 # Write your MySQL query statement below
 with base as (
     select
-        distinct
         b.customer_id,
         sum(distinct a.product_key) as sums,
         count(distinct a.product_key) as cnts
