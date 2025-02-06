@@ -1,26 +1,29 @@
-with base as (
-    select
-        user1_id as user
+# Write your MySQL query statement below
+with pairs as (
+    select 
+        user1_id,
+        user2_id
     from 
         Friendship
     where 
-        user1_id = 1 or user2_id = 1
+        user1_id = 1
     union all
-    select
-        user2_id as user
+    select 
+        user2_id,
+        user1_id
     from 
         Friendship
     where 
-        user1_id = 1 or user2_id = 1
+        user2_id = 1
 )
-select
-    distinct
+select 
+    distinct 
     b.page_id as recommended_page
 from 
-    base a
-inner join
-    Likes b
+    pairs a 
+inner join 
+    Likes b 
 on 
-    a.user = b.user_id
-where
-    a.user != 1 and b.page_id not in (select distinct page_id from Likes where user_id = 1)
+    a.user2_id = b.user_id
+where 
+    b.page_id not in (select page_id from Likes where user_id = 1)
