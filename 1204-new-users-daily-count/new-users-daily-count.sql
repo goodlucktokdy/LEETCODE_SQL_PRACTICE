@@ -1,18 +1,25 @@
 # Write your MySQL query statement below
-select
-    a.first_visit as login_date,
-    count(distinct user_id) as user_count
-from (
+with base as (
     select 
-        distinct
         user_id,
-        min(activity_date) over (partition by user_id) as first_visit
-    from 
-        Traffic
+        min(activity_date) over (partition by user_id) as login_date
+    from (
+        select 
+            user_id,
+            activity,
+            activity_date
+        from 
+            Traffic 
+    ) a 
     where 
         activity = 'login'
-) a
+)
+select 
+    login_date,
+    count(distinct user_id) as user_count
+from 
+    base 
 where 
-    timestampdiff(day,a.first_visit,'2019-06-30') <= 90
+    date_sub('2019-06-30',interval 90 day) <= login_date
 group by 
     login_date
