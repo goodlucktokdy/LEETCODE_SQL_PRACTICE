@@ -1,44 +1,37 @@
 # Write your MySQL query statement below
 with base as (
     select 
-        requester_id as id,
-        count(accepter_id) as num
-    from 
-        RequestAccepted
-    where 
-        requester_id != accepter_id
-    group by 
-        1
-    union all 
-    select 
-        accepter_id as id,
-        count(requester_id) as num
-    from 
-        RequestAccepted
-    where 
-        requester_id != accepter_id
-    group by 
+        requester_id,
         accepter_id
-)
-, ranking as (
+    from 
+        RequestAccepted
+    union all
     select 
-        a.id,
-        num,
-        dense_rank() over (order by a.num desc) as ranks
+        accepter_id,
+        requester_id
+    from 
+        RequestAccepted
+),
+ranks_cte as (
+    select 
+        id,
+        dense_rank() over (order by num desc) as ranks,
+        num
     from (
         select 
-            id,
-            sum(num) as num
+            requester_id as id,
+            count(distinct accepter_id) as num
         from 
             base 
         group by 
-            id
+            id 
     ) a
 )
 select 
     id,
     num
 from 
-    ranking
+    ranks_cte 
 where 
-    ranks = 1
+    ranks = 1 
+    
