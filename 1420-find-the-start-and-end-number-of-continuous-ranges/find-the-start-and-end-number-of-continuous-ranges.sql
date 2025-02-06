@@ -1,14 +1,15 @@
-select
-    min(a.log_id) as start_id,
-    max(a.log_id) as end_id
+# Write your MySQL query statement below
+select 
+    min(log_id) as start_id,
+    max(log_id) as end_id
 from (
-    select
+    select 
         log_id,
-        log_id - row_number() over (order by log_id) as session
+        log_id - row_number() over (order by log_id) as sess
     from 
         Logs
-) a
+) a 
 group by 
-    a.session
+    sess
 order by 
     start_id
