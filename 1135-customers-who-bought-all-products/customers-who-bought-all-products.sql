@@ -1,19 +1,33 @@
 # Write your MySQL query statement below
 with base as (
     select 
-        customer_id,
-        sum(distinct product_key) as sums,
-        count(distinct product_key) as cnts
+        a.customer_id,
+        b.product_key
     from 
-        Customer
-    group by 
-        customer_id
+        Customer a 
+    cross join 
+        Product b 
+),
+no_filter as (
+    select 
+        a.customer_id
+    from 
+        base a 
+    left join 
+        Customer b 
+    on 
+        a.customer_id = b.customer_id and a.product_key = b.product_key
+    where 
+        b.product_key is null 
 )
 select 
     distinct 
-    customer_id
+    a.customer_id
 from 
-    base 
+    Customer a 
+left join 
+    no_filter b 
+on 
+    a.customer_id = b.customer_id 
 where 
-    sums = (select sum(distinct product_key) from Product) and 
-    cnts = (select count(distinct product_key) from Product)
+    b.customer_id is null
