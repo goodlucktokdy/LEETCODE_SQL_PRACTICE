@@ -1,35 +1,18 @@
-with base as (
-    select 
-        a.sale_id,
-        a.product_id,
-        b.product_name,
-        a.year,
-        a.quantity,
-        a.price
-    from 
-        Sales a
-    left join 
-        Product b 
-    on 
-        a.product_id = b.product_id
-)
+# Write your MySQL query statement below
 select 
-    distinct
-    a.product_id,
-    a.first_year,
-    a.quantity,
-    a.price
+    product_id,
+    year as first_year,
+    quantity,
+    price
 from (
     select 
         product_id,
+        dense_rank() over (partition by product_id order by year asc) as ranks,
         year,
-        min(year) over (partition by product_id) as first_year,
         quantity,
         price
-    from
-        base
-    group by 
-        product_id, quantity, price
-) a
+    from 
+        Sales
+) a 
 where 
-    a.year = a.first_year
+    ranks = 1
