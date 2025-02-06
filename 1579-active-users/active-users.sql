@@ -1,29 +1,24 @@
 # Write your MySQL query statement below
-with base as (
-    select 
-        a.id,
-        lag(a.login_date,4) over (partition by a.id order by a.login_date) as prev_four_days,
-        a.login_date
-    from (
-        select 
-            distinct
-            id,
-            login_date
-        from 
-            Logins
-    ) a
-)
 select 
     distinct
-    a.id,
-    b.name
-from 
-    base a
-inner join 
-    Accounts b 
-on 
-    a.id = b.id
-where 
-    prev_four_days + interval 4 day = login_date
+    id,
+    name
+from (
+    select 
+        a.id,
+        a.name,
+        login_date,
+        date_sub(login_date, interval dense_rank() over (partition by a.id order by login_date) day) as sess
+    from 
+        Accounts a 
+    inner join 
+        Logins b 
+    on 
+        a.id = b.id
+) a 
+group by 
+    id,name,sess
+having 
+    count(distinct login_date) >= 5
 order by 
     id
