@@ -1,15 +1,10 @@
-select
-    a.sale_date,
-    sum(a.apples) - sum(a.oranges) as diff
-from (
-        select
-            sale_date,
-            case when fruit = 'apples' then sold_num else 0 end as apples,
-            case when fruit = 'oranges' then sold_num else 0 end as oranges
-        from 
-            Sales
-) a
+# Write your MySQL query statement below
+select 
+    sale_date,
+    sum(case when fruit = 'apples' then sold_num else -1 * sold_num end) as diff
+from 
+    Sales
 group by 
-    a.sale_date
+    sale_date
 order by 
-    a.sale_date
+    sale_date
