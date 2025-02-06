@@ -1,1 +1,1 @@
-<h2>friend-requests-ii-who-has-the-most-friends Notes</h2><hr>[ Time taken: 20 m 51 s ]
+<h2>friend-requests-ii-who-has-the-most-friends Notes</h2><hr>[ Time taken: 1 m 52 s ]
