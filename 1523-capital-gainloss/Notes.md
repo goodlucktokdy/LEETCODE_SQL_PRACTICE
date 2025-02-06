@@ -1,1 +1,1 @@
-<h2>capital-gainloss Notes</h2><hr>[ Time taken: 7 m 33 s ]
+<h2>capital-gainloss Notes</h2><hr>[ Time taken: 1 m 49 s ]
