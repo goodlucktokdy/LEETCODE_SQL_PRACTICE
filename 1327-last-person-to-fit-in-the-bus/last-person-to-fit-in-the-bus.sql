@@ -1,17 +1,29 @@
 # Write your MySQL query statement below
+with base as (
+    select 
+        person_name,
+        cume_weight,
+        turn
+    from (
+        select 
+            person_name,
+            turn,
+            sum(weight) over (order by turn) as cume_weight,
+            1000 as limits
+        from 
+            Queue
+    ) a 
+    where 
+        cume_weight <= limits
+)
 select 
-    a.person_name
+    person_name
 from (
     select 
-        person_id,
         person_name,
-        sum(weight) over (order by turn asc) as cumsum,
-        turn
+        dense_rank() over (order by turn desc) as ranks
     from 
-        Queue
+        base 
 ) a
-where
-    cumsum <= 1000
-order by 
-    turn desc
-limit 1
+where 
+    ranks = 1
