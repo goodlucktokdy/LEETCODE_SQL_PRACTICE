@@ -1,17 +1,21 @@
 # Write your MySQL query statement below
 with base as (
     select 
-        id,
         num,
-        lead(num) over (order by id) as lead1,
-        lead(num,2) over (order by id) as lead2
-    from 
-        Logs
+        count(num) over (partition by num, sess) as cnts
+    from (
+        select 
+            id,
+            num,
+            id - cast(row_number() over (partition by num order by id) as real) as sess
+        from 
+            Logs
+    ) a
 )
 select 
     distinct 
-    num as ConsecutiveNums
+    coalesce(num, null) as ConsecutiveNums
 from 
     base 
 where 
-    num = lead1 and lead1 = lead2
+    cnts >= 3
