@@ -1,19 +1,18 @@
-select
-    a.student_id,
-    min(a.course_id) as course_id,
-    a.grade
+# Write your MySQL query statement below
+select 
+    student_id,
+    course_id,
+    grade
 from (
-    select
+    select 
         student_id,
         course_id,
         grade,
-        rank() over (partition by student_id order by grade desc) as ranks
+        dense_rank() over (partition by student_id order by grade desc, course_id asc) as ranks
     from 
         Enrollments
-) a
+) a 
 where 
     ranks = 1
-group by
-    a.student_id, a.grade
 order by 
-    a.student_id asc
+    student_id
