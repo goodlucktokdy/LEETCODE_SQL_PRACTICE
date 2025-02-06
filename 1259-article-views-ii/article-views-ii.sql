@@ -1,20 +1,18 @@
 # Write your MySQL query statement below
-with base as (
-    select 
-        viewer_id,
-        view_date,
-        count(distinct article_id) as cnts
-    from 
-        Views 
-    group by 
-        1,2
-)
 select 
     distinct 
     viewer_id as id
-from 
-    base 
-where 
-    cnts > 1 
+from (
+    select 
+        view_date,
+        viewer_id,
+        count(distinct article_id) as cnts
+    from 
+        Views
+    group by 
+        view_date, viewer_id 
+    having 
+        cnts > 1
+) a 
 order by 
     id
