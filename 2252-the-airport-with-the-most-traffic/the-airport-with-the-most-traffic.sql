@@ -1,28 +1,34 @@
 # Write your MySQL query statement below
 with base as (
     select 
-        departure_airport as airport,
-        flights_count
+        departure_airport as airport_id,
+        flights_count as flights
     from 
         Flights
     union all
     select 
-        arrival_airport as airport,
-        flights_count
+        arrival_airport as airport_id,
+        flights_count as flights
     from 
         Flights
+),
+final_info as (
+    select 
+        airport_id,
+        dense_rank() over (order by flights desc) as ranks
+    from (
+        select 
+            airport_id,
+            sum(flights) as flights
+        from 
+            base 
+        group by 
+            airport_id
+    ) a
 )
 select 
-    distinct
-    a.airport as airport_id
-from (
-    select 
-        airport,
-        dense_rank() over (order by sum(flights_count) desc) as flights_ranking
-    from 
-        base
-    group by 
-        airport
-) a 
-where
-    a.flights_ranking = 1
+    airport_id
+from 
+    final_info 
+where 
+    ranks = 1
