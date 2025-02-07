@@ -1,43 +1,31 @@
+# Write your MySQL query statement below
 with base as (
-    select
-        a.order_id,
-        a.customer_id,
-        a.product_id,
-        b.product_name,
-        c.name
-    from 
-        Orders a
-    left join
-        Products b
-    on
-        a.product_id = b.product_id
-    inner join
-        Customers c
-    on
-        a.customer_id = c.customer_id
-), mid_cte as (
-    select
-        a.customer_id,
-        a.product_name,
-        a.product_id,
-        dense_rank() over (partition by a.customer_id order by a.order_cnts desc) as ranks
+    select 
+        customer_id,
+        product_id,
+        product_name,
+        dense_rank() over (partition by customer_id order by orders desc) as ranks
     from (
-        select
-            distinct
-            customer_id,
-            count(order_id) over (partition by customer_id,product_id) as order_cnts,
-            product_name,
-            product_id
+        select 
+            a.customer_id,
+            a.product_id,
+            b.product_name,
+            count(distinct order_id) as orders
         from 
-            base
+            Orders a 
+        inner join 
+            Products b 
+        on 
+            a.product_id = b.product_id
+        group by 
+            a.customer_id, a.product_id, b.product_name
     ) a
 )
-select
-    distinct
+select 
     customer_id,
     product_id,
     product_name
 from 
-    mid_cte
+    base 
 where 
     ranks = 1
