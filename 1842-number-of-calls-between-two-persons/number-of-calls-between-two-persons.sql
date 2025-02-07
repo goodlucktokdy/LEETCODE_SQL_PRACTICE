@@ -1,23 +1,27 @@
-with base as (
-    select
-        a.pairs,
-        sum(a.duration) as total_duration,
-        count(a.pairs) as call_count
-    from (
-        select
-            case when from_id < to_id then concat(from_id,',',to_id) 
-                    else concat(to_id,',',from_id) end as pairs,
-            duration
-        from
-            Calls
-    ) a
-    group by 
-        a.pairs
+# Write your MySQL query statement below
+with pairs as (
+    select 
+        from_id,
+        to_id,
+        duration
+    from 
+        Calls
+    union all
+    select 
+        to_id,
+        from_id,
+        duration
+    from 
+        Calls
 )
-select
-    cast(substring_index(pairs,',',1) as real) as person1,
-    cast(substring_index(pairs,',',-1) as real) as person2,
-    call_count,
-    total_duration
+select 
+    from_id as person1,
+    to_id as person2,
+    count(to_id) as call_count,
+    sum(duration) as total_duration
 from 
-    base
+    pairs 
+group by 
+    person1, person2
+having 
+    person1 < person2
