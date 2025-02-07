@@ -1,26 +1,24 @@
-with recents as (
-    select
-        product_id,
-        max(order_date) as most_recent
+# Write your MySQL query statement below
+select 
+    product_name,
+    product_id,
+    order_id,
+    order_date
+from (
+    select 
+        b.product_name,
+        b.product_id,
+        a.order_id,
+        a.order_date,
+        dense_rank() over (partition by a.product_id order by a.order_date desc) as ranks
     from 
-        Orders 
-    group by 
-        product_id
-)
-select
-    c.product_name,
-    a.product_id,
-    b.order_id,
-    a.most_recent as order_date
-from 
-    recents a
-inner join 
-    Orders b
-on 
-    a.product_id = b.product_id and a.most_recent = b.order_date
-inner join 
-    Products c
-on
-    a.product_id = c.product_id
+        Orders a 
+    inner join 
+        Products b 
+    on 
+        a.product_id = b.product_id
+) a
+where 
+    ranks = 1
 order by 
-    c.product_name asc, a.product_id asc, b.order_id asc
+    product_name, product_id, order_id
