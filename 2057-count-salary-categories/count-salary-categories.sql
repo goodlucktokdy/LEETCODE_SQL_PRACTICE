@@ -1,32 +1,29 @@
 # Write your MySQL query statement below
-with cat_cte as (
+with categories as (
     select 
-        'Low Salary' as category
-    union all
+        'Low Salary' as category 
+    union 
     select 
         'Average Salary' as category
-    union all
+    union 
     select 
         'High Salary' as category
-)
-, income_cnt as (
-    select 
-        case when income > 50000 then 'High Salary' 
-            when income between 20000 and 50000 then 'Average Salary'
-            when income < 20000 then 'Low Salary' else null end as category,
-        income,
-        account_id
-    from 
-        Accounts
 )
 select 
     a.category,
     count(distinct b.account_id) as accounts_count
 from 
-    cat_cte a
-left join
-    income_cnt b
+    categories a 
+left join (
+   select 
+        case when income < 20000 then 'Low Salary'
+            when income between 20000 and 50000 then 'Average Salary'
+            else 'High Salary' end as category,
+        account_id
+    from 
+        Accounts
+) b
 on 
     a.category = b.category
 group by 
-    category
+    a.category 
