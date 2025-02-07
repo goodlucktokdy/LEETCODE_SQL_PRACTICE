@@ -1,17 +1,37 @@
+# Write your MySQL query statement below
 with base as (
-    select
+    select 
         user_id,
-        visit_date,
-        lead(visit_date) over (partition by user_id order by visit_date) as next_visit
+        visit_date
     from 
         UserVisits
+    union all
+    select 
+        user_id,
+        '2021-01-01' as visit_date
+    from 
+        UserVisits
+),
+diff_info as (
+    select 
+        user_id,
+        timestampdiff(day,prev_visit,visit_date) as diff_date,
+        visit_date
+    from (
+        select 
+            user_id,
+            lag(visit_date) over (partition by user_id order by visit_date) as prev_visit,
+            visit_date
+        from 
+            base
+    ) a
 )
-select
+select 
     user_id,
-    max(timestampdiff(day,visit_date,ifnull(next_visit,'2021-01-01'))) as biggest_window
+    max(diff_date) as biggest_window
 from 
-    base
+    diff_info
 group by 
-    user_id
+    user_id 
 order by 
     user_id
