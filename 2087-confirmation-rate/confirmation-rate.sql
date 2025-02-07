@@ -1,20 +1,12 @@
 # Write your MySQL query statement below
-with base as (
-    select 
-        a.user_id,
-        b.time_stamp,
-        b.action
-    from
-        Signups a
-    left join
-        Confirmations b
-    on 
-        a.user_id = b.user_id
-)
 select 
-    user_id,
-    coalesce(round(count(distinct case when action = 'confirmed' then time_stamp end)/count(distinct time_stamp),2),0) as confirmation_rate
+    a.user_id,
+    round(coalesce(count(distinct case when b.action = 'confirmed' then b.time_stamp else null end)/count(distinct b.time_stamp),0),2) as confirmation_rate
 from 
-    base 
+    Signups a 
+left join 
+    Confirmations b 
+on 
+    a.user_id = b.user_id 
 group by 
-    user_id
+    a.user_id
