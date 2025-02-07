@@ -1,20 +1,27 @@
 # Write your MySQL query statement below
 with recursive cte as (
     select 
-        1 as id
+        1 as ids
+    from 
+        Customers
     union all
     select 
-        cte.id + 1
+        cte.ids + 1 
     from 
         cte 
     where 
-        cte.id < (select max(customer_id) from Customers where customer_id <= 100)
+        cte.ids < (select max(customer_id) from Customers)
 )
 select 
-    id as ids
+    distinct
+    ids
 from 
-    cte
+    cte a
+left join 
+    Customers b 
+on 
+    a.ids = b.customer_id
 where 
-    id not in (select customer_id from Customers)
+    b.customer_id is null
 order by 
     ids
