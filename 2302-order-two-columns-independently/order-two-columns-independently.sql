@@ -1,21 +1,24 @@
 # Write your MySQL query statement below
-with base as (
+with c1 as (
     select 
         first_col,
+        row_number() over (order by first_col) as rn 
+    from Data
+),
+c2 as (
+    select 
         second_col,
-        row_number() over (order by first_col) as first_ranks,
-        row_number() over (order by second_col desc) as second_ranks
-    from 
-        Data
+        row_number() over (order by second_col desc) as rn 
+    from Data
 )
 select 
     a.first_col,
     b.second_col
 from 
-    base a 
+    c1 a 
 inner join 
-    base b 
+    c2 b 
 on 
-    a.first_ranks = b.second_ranks
+    a.rn = b.rn
 order by 
-    a.first_ranks
+    a.rn
