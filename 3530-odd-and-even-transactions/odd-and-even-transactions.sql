@@ -1,3 +1,4 @@
+# Write your MySQL query statement below
 select 
     transaction_date,
     sum(case when amount % 2 = 1 then amount else 0 end) as odd_sum,
@@ -7,4 +8,4 @@ from
 group by 
     transaction_date
 order by 
-    transaction_date asc
+    transaction_date
