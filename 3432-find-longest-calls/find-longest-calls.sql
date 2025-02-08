@@ -1,37 +1,30 @@
 # Write your MySQL query statement below
 with base as (
     select 
-        a.contact_id,
-        b.first_name,
-        a.type,
-        a.duration
-    from 
-        Calls a 
-    left join 
-        Contacts b 
-    on 
-        a.contact_id = b.id
-)
-, dense_ranks as (
-    select 
-        distinct
         first_name,
         type,
-        date_format(sec_to_time(duration),'%H:%i:%s') as duration,
-        case when type = 'incoming' then 
-        dense_rank() over (partition by type order by duration desc) end as incomings,
-        case when type = 'outgoing' then
-        dense_rank() over (partition by type order by duration desc) end as outgoings
-    from 
-        base
+        date_format(sec_to_time(duration),'%H:%i:%S') as duration_formatted,
+        dense_rank() over (partition by type order by duration desc) as ranks
+    from (
+        select 
+            a.first_name,
+            b.type,
+            b.duration as duration
+        from 
+            Contacts a
+        inner join 
+            Calls b 
+        on 
+            a.id = b.contact_id
+    ) a
 )
 select 
     first_name,
     type,
-    duration as duration_formatted
+    duration_formatted
 from 
-    dense_ranks
-where
-    (incomings <=3 and outgoings is null) or (outgoings <= 3 and incomings is null)
+    base 
+where 
+    ranks <= 3
 order by 
-    type desc, duration_formatted desc, first_name desc
+    type desc, duration_formatted desc, first_name desc 
