@@ -4,7 +4,7 @@ select
     day,
     degree
 from (
-    select
+    select 
         city_id,
         day,
         degree,
@@ -15,4 +15,4 @@ from (
 where 
     ranks = 1
 order by 
-    city_id
+    city_id 
