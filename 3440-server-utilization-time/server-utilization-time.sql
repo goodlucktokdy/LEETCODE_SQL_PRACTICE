@@ -1,37 +1,20 @@
 # Write your MySQL query statement below
 with base as (
     select 
-        a.server_id,
-        a.sessions,
-        max(case when a.session_status = 'start' then a.status_time else null end) as start_time,
-        max(case when a.session_status = 'stop' then a.status_time else null end) as stop_time
+        server_id,
+        timestampdiff(minute,min(status_time),max(status_time)) as diff_minute
     from (
         select 
-            distinct
             server_id,
             status_time,
-            session_status,
-            sum(case when session_status = 'start' then 1 else 0 end) over (partition by server_id order by status_time) as sessions
+            row_number() over (partition by server_id,session_status order by status_time) as sess
         from 
             Servers
-    ) a 
+    ) a
     group by 
-        1,2
-), minutes_cte as (
-    select 
-        sum(a.diff_of_minute) as sum_minute
-    from (
-        select 
-            server_id,
-            sessions,
-            start_time,
-            stop_time,
-            timestampdiff(minute,start_time,stop_time) as diff_of_minute
-        from 
-            base
-    ) a 
+        sess,server_id
 )
 select 
-    floor(sum_minute/1440) as total_uptime_days
+    floor(sum(diff_minute)/(60*24)) as total_uptime_days
 from 
-    minutes_cte
+    base
