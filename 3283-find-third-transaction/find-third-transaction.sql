@@ -1,35 +1,38 @@
 # Write your MySQL query statement below
 with base as (
     select 
-        distinct
         user_id,
-        min(transaction_date) over (partition by user_id) as first_transaction,
-        lead(spend,2) over (partition by user_id order by transaction_date) as third_spend,
-        lead(spend,1) over (partition by user_id order by transaction_date) as second_spend,
-        spend,
-        lead(transaction_date,2) over (partition by user_id order by transaction_date) as third_transaction,
-        transaction_date
+        transaction_date,
+        row_number() over (partition by user_id order by transaction_date) as rnums,
+        spend
     from 
-        Transactions
+        Transactions 
 )
 select 
-    a.user_id,
-    a.third_spend as third_transaction_spend,
-    a.third_transaction as third_transaction_date
+    user_id,
+    third_transaction_spend,
+    third_transaction_date
 from (
     select 
-        user_id,
-        third_transaction,
-        first_transaction,
-        third_spend,
-        second_spend,
-        spend as first_spend
+        a.user_id,
+        a.transaction_date,
+        a.spend,
+        a.rnums,
+        b.transaction_date as third_transaction_date,
+        b.spend as third_transaction_spend
     from 
-        base
+        base a 
+    left join 
+        base b 
+    on 
+        a.user_id = b.user_id and a.rnums < 3 and b.rnums = 3
+        and a.spend < b.spend
     where 
-        first_transaction = transaction_date
-        and
-        third_spend > second_spend and third_spend > spend
-) a 
+        b.user_id is not null
+) a
+group by 
+    1,2,3
+having 
+    sum(distinct rnums) = 3 
 order by 
-    user_id asc 
+    user_id
