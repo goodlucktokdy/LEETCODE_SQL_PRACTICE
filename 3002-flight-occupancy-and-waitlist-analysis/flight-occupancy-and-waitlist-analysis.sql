@@ -1,21 +1,23 @@
 # Write your MySQL query statement below
 select 
-    a.flight_id,
-    case when a.passengers < a.capacity then a.passengers else a.capacity end as booked_cnt,
-    case when a.passengers - a.capacity > 0 then a.passengers - a.capacity 
-    else 0 end as waitlist_cnt
+    flight_id,
+    max(case when cnts = 0 then 0 
+            when capacity >= cnts then cnts else capacity end) as booked_cnt,
+    max(case when capacity < cnts then cnts - capacity else 0 end) as waitlist_cnt
 from (
     select 
-        distinct
         a.flight_id,
+        b.passenger_id,
         a.capacity,
-        coalesce(count(b.passenger_id) over (partition by flight_id),0) as passengers
+        count(b.passenger_id) over (partition by a.flight_id) as cnts
     from 
         Flights a 
     left join 
-        Passengers b 
+        Passengers b
     on 
         a.flight_id = b.flight_id
-) a 
+) a
+group by 
+    flight_id
 order by 
-    a.flight_id asc 
+    flight_id
