@@ -1,24 +1,29 @@
 # Write your MySQL query statement below
 with base as (
     select 
-        a.candidate,
-        sum(a.rate) as votes
+        candidate,
+        sum(1/voter_cnts) as votes
     from (
-        select
+        select 
             voter,
-            candidate,
-            coalesce(1/count(candidate) over (partition by voter),0) as rate
+            count(voter) over (partition by voter) as voter_cnts,
+            candidate
         from 
             Votes
     ) a
     group by 
-        1
+        candidate
 )
 select 
     candidate
-from 
-    base 
+from (
+    select 
+        candidate,
+        dense_rank() over (order by votes desc) as ranks
+    from 
+        base
+) a
 where 
-    votes = (select max(votes) from base)
-order by 
-    candidate asc
+    ranks = 1
+order by
+    candidate asc 
