@@ -10,11 +10,11 @@ with base as (
             a.product_id,
             sum(a.quantity * b.price) as price
         from 
-            Sales a
+            Sales a 
         inner join 
             Product b 
         on 
-            a.product_id = b.product_id
+            a.product_id = b.product_id 
         group by 
             a.user_id, a.product_id
     ) a
