@@ -1,26 +1,33 @@
+# Write your MySQL query statement below
 with base as (
     select 
-        count(a.id) over (partition by a.candidateId) as votes,
-        b.name
-    from 
-        Vote a 
-    inner join 
-        Candidate b 
-    on
-        a.candidateId = b.id 
+        candidate_id,
+        name,
+        count(distinct vote_id) as cnts
+    from (
+        select 
+            a.id as candidate_id,
+            a.name,
+            b.id as vote_id
+        from 
+            Candidate a 
+        inner join 
+            Vote b 
+        on
+            a.id = b.candidateId
+    ) a 
+    group by 
+        candidate_id
 )
 select 
-    distinct
-    a.name
+    name
 from (
     select 
+        candidate_id,
         name,
-        votes,
-        max(votes) over () as max_votes
+        dense_rank() over (order by cnts desc) as ranks
     from 
-        base
-    group by
-        name
+        base 
 ) a
 where 
-    a.votes = a.max_votes
+    ranks = 1
