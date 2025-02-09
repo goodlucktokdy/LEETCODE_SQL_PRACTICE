@@ -1,1 +1,1 @@
-<h2>managers-with-at-least-5-direct-reports Notes</h2><hr>[ Time taken: 12 m 41 s ]
+<h2>managers-with-at-least-5-direct-reports Notes</h2><hr>[ Time taken: 2 m 35 s ]
