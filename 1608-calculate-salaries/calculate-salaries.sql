@@ -15,4 +15,4 @@ from (
         max(salary) over (partition by company_id) as max_sal
     from 
         Salaries
-) a 
+) a
