@@ -4,11 +4,11 @@ select
 from (
     select 
         customer_id,
-        min(order_date) over (partition by customer_id) as first_order,
         order_date,
+        dense_rank() over (partition by customer_id order by order_date asc) as ranks,
         customer_pref_delivery_date
-    from   
+    from 
         Delivery
-) a 
+) a
 where 
-    first_order = order_date
+    ranks = 1
