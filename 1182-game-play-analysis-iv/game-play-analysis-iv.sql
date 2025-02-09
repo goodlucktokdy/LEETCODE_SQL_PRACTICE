@@ -8,4 +8,4 @@ from (
         event_date
     from 
         Activity
-) a 
+) a
