@@ -2,8 +2,9 @@
 with base as (
     select 
         visited_on,
-        sum(amount) over (order by visited_on range between interval 6 day preceding and current row) as amount,
-        round(avg(amount) over (order by visited_on range between interval 6 day preceding and current row),2) as average_amount
+        round(sum(amount) over (order by visited_on range between interval 6 day preceding and current row),2) as amount,
+        round(avg(amount) over (order by visited_on range between interval 6 day preceding and current row),2) as average_amount,
+        row_number() over (order by visited_on) as rnums
     from (
         select 
             visited_on,
@@ -21,6 +22,6 @@ select
 from 
     base 
 where 
-    date_add((select min(visited_on) from Customer),interval 6 day) <= visited_on
+    rnums > 6
 order by 
     visited_on
