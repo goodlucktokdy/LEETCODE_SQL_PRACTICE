@@ -7,12 +7,12 @@ select
 from (
     select 
         product_id,
-        dense_rank() over (partition by product_id order by year asc) as ranks,
         year,
         quantity,
-        price
+        price,
+        dense_rank() over (partition by product_id order by year asc) as ranks
     from 
         Sales
-) a 
+) a
 where 
     ranks = 1
