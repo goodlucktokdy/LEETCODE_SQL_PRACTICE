@@ -1,18 +1,27 @@
 # Write your MySQL query statement below
 with base as (
     select 
-        pid,
-        tiv_2015,
-        count(tiv_2015) over (partition by tiv_2015) as cnt15,
-        tiv_2016,
-        concat(lat,',',lon) as latlon,
-        count(concat(lat,',',lon)) over (partition by concat(lat,',',lon)) as latlon_cnt
+        distinct
+        a.pid,
+        a.tiv_2016,
+        a.lat,
+        a.lon
     from 
-        Insurance
+        Insurance a 
+    inner join 
+        Insurance b 
+    on 
+        a.pid != b.pid and a.tiv_2015 = b.tiv_2015
 )
 select 
     round(sum(tiv_2016),2) as tiv_2016
-from 
-    base 
-where 
-    latlon_cnt = 1 and cnt15 != 1
+from (
+    select 
+        pid,
+        tiv_2016
+    from
+        base a 
+    where not exists 
+        (select 1 from Insurance b 
+            where a.pid != b.pid and (a.lat,a.lon) = (b.lat,b.lon))
+) a
