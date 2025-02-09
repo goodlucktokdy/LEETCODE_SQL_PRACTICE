@@ -1,5 +1,5 @@
 # Write your MySQL query statement below
-with base as (
+with pairs as (
     select 
         requester_id,
         accepter_id
@@ -15,16 +15,16 @@ with base as (
 ranks_cte as (
     select 
         id,
-        dense_rank() over (order by num desc) as ranks,
-        num
+        num,
+        dense_rank() over (order by num desc) as ranks
     from (
         select 
             requester_id as id,
             count(distinct accepter_id) as num
         from 
-            base 
+            pairs 
         group by 
-            id 
+            requester_id
     ) a
 )
 select 
@@ -32,6 +32,5 @@ select
     num
 from 
     ranks_cte 
-where 
-    ranks = 1 
-    
+where
+    ranks = 1
