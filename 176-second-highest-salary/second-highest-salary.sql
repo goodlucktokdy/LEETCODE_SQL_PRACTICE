@@ -1,12 +1,17 @@
 # Write your MySQL query statement below
+with base as (
+    select 
+        id,
+        salary,
+        dense_rank() over (order by salary desc) as ranks
+    from 
+        Employee
+)
 select 
-    (
-select 
-    distinct
-    salary
+    max(case when b.id is null then null else b.salary end) as SecondHighestSalary
 from 
-    Employee
-order by 
-    salary desc
-limit 1 offset 1
-) as SecondHighestSalary
+    base a 
+left join 
+    base b 
+on 
+    a.id = b.id and a.ranks = b.ranks and b.ranks = 2
