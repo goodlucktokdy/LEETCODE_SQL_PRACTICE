@@ -1,38 +1,26 @@
 # Write your MySQL query statement below
 with base as (
     select 
-        a.customer_id,
-        a.customer_name,
-        b.product_name
+        customer_id,
+        product_name
     from 
-        Customers a 
-    inner join 
-        Orders b 
-    on 
-        a.customer_id = b.customer_id
+        Orders a 
+    where not exists 
+        (select 1 from Orders b 
+            where a.customer_id = b.customer_id and b.product_name = 'C')
 )
 select 
-    customer_id,
-    customer_name
-from (
-    select 
-        a.customer_id,
-        a.customer_name,
-        a.product_name
-    from 
-        base a 
-    where not exists 
-        (select 1 from base b 
-            where a.customer_id = b.customer_id and b.product_name = 'C')
-    and exists
-        (select 1 from base b 
-            where a.customer_id = b.customer_id and b.product_name in ('A','B'))
-) a 
-where 
-    product_name in ('A','B')
+    a.customer_id,
+    b.customer_name
+from 
+    base a
+inner join 
+    Customers b 
+on 
+    a.customer_id = b.customer_id
 group by 
-    customer_id,customer_name 
+    a.customer_id
 having 
-    count(distinct product_name) = 2
+    count(distinct case when product_name in ('A','B') then product_name else null end) = 2
 order by 
-    customer_id
+    a.customer_id
