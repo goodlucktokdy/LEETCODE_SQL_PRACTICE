@@ -1,24 +1,31 @@
 # Write your MySQL query statement below
-select 
-    distinct
-    id,
-    name
-from (
+with base as (
     select 
-        a.id,
-        a.name,
+        id,
         login_date,
-        date_sub(login_date, interval dense_rank() over (partition by a.id order by login_date) day) as sess
-    from 
-        Accounts a 
-    inner join 
-        Logins b 
-    on 
-        a.id = b.id
-) a 
+        date_sub(login_date, interval row_number() over (partition by id order by login_date) day) as sess
+    from (
+        select 
+            distinct 
+            id,
+            login_date
+        from 
+            Logins
+    ) a
+)
+select 
+    distinct 
+    a.id as id,
+    b.name as name
+from 
+    base a 
+inner join 
+    Accounts b 
+on 
+    a.id = b.id 
 group by 
-    id,name,sess
+    a.id,a.sess
 having 
-    count(distinct login_date) >= 5
+    count(distinct a.login_date) >= 5
 order by 
-    id
+    id asc
