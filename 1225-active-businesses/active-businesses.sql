@@ -9,7 +9,7 @@ from (
         avg(occurrences) over (partition by event_type) as avg_occurrences
     from 
         Events
-) a 
+) a
 where 
     occurrences > avg_occurrences
 group by 
