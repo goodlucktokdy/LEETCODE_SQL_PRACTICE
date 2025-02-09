@@ -12,7 +12,7 @@ from (
         b.order_date,
         row_number() over (partition by a.customer_id order by b.order_date desc) as ranks
     from 
-        Customers a
+        Customers a 
     inner join 
         Orders b 
     on 
@@ -21,4 +21,4 @@ from (
 where 
     ranks <= 3
 order by 
-    customer_name, customer_id, order_date desc
+    customer_name asc, customer_id asc, order_date desc
