@@ -1,1 +1,1 @@
-<h2>last-person-to-fit-in-the-bus Notes</h2><hr>[ Time taken: 3 m 6 s ]
+<h2>last-person-to-fit-in-the-bus Notes</h2><hr>[ Time taken: 2 m 5 s ]
