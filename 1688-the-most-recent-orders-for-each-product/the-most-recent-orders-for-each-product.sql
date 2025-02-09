@@ -21,4 +21,4 @@ from (
 where 
     ranks = 1
 order by 
-    product_name, product_id, order_id
+    product_name asc, product_id asc, order_id asc
