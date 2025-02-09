@@ -4,15 +4,15 @@ select
     viewer_id as id
 from (
     select 
-        view_date,
         viewer_id,
+        view_date,
         count(distinct article_id) as cnts
     from 
-        Views
+        Views 
     group by 
-        view_date, viewer_id 
+        viewer_id, view_date
     having 
         cnts > 1
-) a 
+) a
 order by 
-    id
+    id 
