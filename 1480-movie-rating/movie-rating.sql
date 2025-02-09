@@ -1,5 +1,5 @@
 # Write your MySQL query statement below
-with name_cte as (
+with names_cte as (
     select 
         user_id,
         name,
@@ -8,7 +8,7 @@ with name_cte as (
         select 
             a.user_id,
             a.name,
-            count(b.created_at) as cnts
+            count(distinct movie_id) as cnts
         from 
             Users a 
         inner join 
@@ -19,23 +19,22 @@ with name_cte as (
             a.user_id, a.name
     ) a
 ),
-title_cte as (
+movie_cte as (
     select 
+        movie_id,
         title,
-        dense_rank() over (order by average_rating desc, title asc) as ranks
+        dense_rank() over (order by avg_rating desc, title asc) as ranks
     from (
         select 
             a.movie_id,
             a.title,
-            avg(rating) as average_rating
+            avg(b.rating) as avg_rating
         from 
-            Movies a 
+            MovieRating b
         inner join 
-            MovieRating b 
+            Movies a 
         on 
-            a.movie_id = b.movie_id
-        where 
-            year(B.created_at) = 2020 and month(b.created_at) = 2
+            a.movie_id = b.movie_id and year(b.created_at) = 2020 and month(b.created_at) = 2
         group by 
             a.movie_id, a.title
     ) a
@@ -43,13 +42,13 @@ title_cte as (
 select 
     name as results
 from 
-    name_cte 
+    names_cte
 where 
-    ranks = 1 
+    ranks = 1
 union all
 select 
-    title as results
-from 
-    title_cte
+    title
+from
+    movie_cte
 where 
     ranks = 1
