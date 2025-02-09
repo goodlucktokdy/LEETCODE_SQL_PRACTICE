@@ -1,28 +1,20 @@
-with base as (
+# Write your MySQL query statement below
+select  
+    name
+from (
     select 
         a.id,
         a.name,
-        b.id as report_from,
-        b.managerId
+        b.id as bid,
+        b.name as bname
     from 
         Employee a
-    left join
+    inner join 
         Employee b 
     on 
         a.id = b.managerId
-)
-select 
-    a.name
-from (
-    select
-        distinct
-        id,
-        name,
-        count(distinct report_from) as num_of_reports
-    from 
-        base
-    group by 
-        id,name
-    having 
-        num_of_reports >= 5
 ) a
+group by 
+    id 
+having 
+    count(distinct bid) >= 5
