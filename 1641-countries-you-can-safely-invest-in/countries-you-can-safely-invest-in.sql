@@ -1,56 +1,48 @@
 # Write your MySQL query statement below
 with base as (
     select 
-        b.id,
-        b.name,
-        a.name as country
+        a.id,
+        a.name,
+        b.name as country
     from 
-        Country a 
-    inner join (
-        select 
-            id,
-            name,
-            left(phone_number,3) as country_code
-        from 
-            Person
-    ) b 
-    on
-        a.country_code = b.country_code
+        Person a 
+    inner join 
+        Country b 
+    on 
+        substring(a.phone_number,1,3) = b.country_code
 ),
-pairs as (
+call_pairs as (
     select 
-        caller_id,
-        callee_id,
+        caller_id as country_id,
         duration
     from 
         Calls
     union all
     select 
-        callee_id,
-        caller_id,
+        callee_id as country_id,
         duration
     from 
         Calls
 )
 select 
-    distinct
-    callers as country
+    distinct 
+    country
 from (
     select 
-        a.country as callers,
-        duration,
-        avg(b.duration) over () as global_avg,
-        avg(b.duration) over (partition by a.country) as country_avg
+        a.country,
+        b.duration,
+        avg(b.duration) over (partition by a.country) as country_avg,
+        avg(b.duration) over () as total_avg
     from 
         base a 
     inner join 
-        pairs b 
+        call_pairs b 
     on 
-        a.id = b.caller_id
+        a.id = b.country_id
     inner join 
-        base c 
+        base c
     on 
-        b.callee_id = c.id
+        b.country_id = c.id
 ) a
 where 
-    country_avg > global_avg
+    country_avg > total_avg
