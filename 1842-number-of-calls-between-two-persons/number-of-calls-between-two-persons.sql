@@ -1,13 +1,15 @@
 # Write your MySQL query statement below
 with pairs as (
     select 
-        from_id,
-        to_id,
+        row_number() over () as rnums,
+        from_id as person1,
+        to_id as person2,
         duration
     from 
         Calls
     union all
     select 
+        row_number() over () as rnums,
         to_id,
         from_id,
         duration
@@ -15,13 +17,17 @@ with pairs as (
         Calls
 )
 select 
-    from_id as person1,
-    to_id as person2,
-    count(to_id) as call_count,
-    sum(duration) as total_duration
+    a.person1,
+    a.person2,
+    count(b.person2) as call_count,
+    sum(b.duration) as total_duration
 from 
-    pairs 
+    pairs a
+inner join 
+    pairs b 
+on 
+    a.rnums = b.rnums and a.person1 = b.person1 and a.person2 = b.person2
 group by 
-    person1, person2
+    a.person1, a.person2
 having 
-    person1 < person2
+    a.person1 < a.person2
