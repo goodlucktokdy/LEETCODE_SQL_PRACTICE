@@ -1,25 +1,39 @@
+# Write your MySQL query statement below
 with base as (
+    select 
+        Wimbledon as winners
+    from 
+        Championships
+    union all
     select
-        Wimbledon as id from Championships
-        union all
+        Fr_open
+    from 
+        Championships
+    union all
     select
-        Fr_open as id from Championships
-        union all
-    select
-        US_open as id from Championships
-        union all
-    select
-        Au_open as id from Championships
+        US_open
+    from 
+        Championships
+    union all
+    select 
+        Au_open
+    from 
+        Championships
 )
-select
-    a.player_id,
-    a.player_name,
-    count(b.id) as grand_slams_count
-from 
-    Players a
-inner join
-    base b
-on 
-    a.player_id = b.id
-group by
-    1,2
+select 
+    winners as player_id,
+    player_name,
+    count(player_name) as grand_slams_count
+from (
+    select 
+        a.winners,
+        b.player_name
+    from 
+        base a 
+    inner join 
+        Players b 
+    on 
+        a.winners = b.player_id
+) a
+group by 
+    winners, player_name
