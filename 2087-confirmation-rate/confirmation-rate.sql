@@ -7,6 +7,6 @@ from
 left join 
     Confirmations b 
 on 
-    a.user_id = b.user_id 
-group by 
+    a.user_id = b.user_id
+group by
     a.user_id
