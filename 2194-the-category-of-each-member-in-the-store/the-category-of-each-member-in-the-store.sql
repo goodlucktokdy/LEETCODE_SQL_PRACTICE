@@ -1,35 +1,27 @@
 # Write your MySQL query statement below
-with visit_cte as (
+with base as (
     select 
         a.member_id,
-        a.name,
-        b.visit_id
-    from 
-        Members a 
-    left join 
-        Visits b 
-    on 
-        a.member_id = b.member_id    
-)
-select 
-    member_id,
-    name,
-    case when visits = 0 then 'Bronze'
-        when conversion_rate >= 80 then 'Diamond'
-        when conversion_rate >= 50 then 'Gold'
-        else 'Silver' end as category
-from (
-    select 
-        a.member_id,
-        a.name,
-        count(distinct a.visit_id) as visits,
         100.0*count(distinct b.visit_id)/count(distinct a.visit_id) as conversion_rate
     from 
-        visit_cte a 
-    left join 
-        Purchases b
+        Visits a 
+    left join
+        Purchases b 
     on 
         a.visit_id = b.visit_id
     group by 
-        a.member_id, a.name
-) a
+        a.member_id
+)
+select 
+    a.member_id,
+    a.name,
+    case when b.conversion_rate is null then 'Bronze'
+        when b.conversion_rate >= 80 then 'Diamond'
+        when b.conversion_rate >= 50 then 'Gold'
+        else 'Silver' end as category
+from 
+    Members a 
+left join 
+    base b 
+on 
+    a.member_id = b.member_id
