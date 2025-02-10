@@ -7,18 +7,18 @@ with base as (
         dense_rank() over (partition by customer_id order by orders desc) as ranks
     from (
         select 
-            a.customer_id,
+            b.customer_id,
             a.product_id,
-            b.product_name,
-            count(distinct order_id) as orders
+            a.product_name,
+            count(distinct b.order_id) as orders
         from 
-            Orders a 
+            Products a 
         inner join 
-            Products b 
+            Orders b 
         on 
             a.product_id = b.product_id
         group by 
-            a.customer_id, a.product_id, b.product_name
+            b.customer_id, a.product_id, a.product_name
     ) a
 )
 select 
