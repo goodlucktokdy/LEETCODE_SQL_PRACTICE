@@ -1,13 +1,12 @@
 # Write your MySQL query statement below
 with base as (
-    select 
+    select
         candidate,
-        sum(1/voter_cnts) as votes
+        sum(cnts) as sums
     from (
         select 
-            voter,
-            count(voter) over (partition by voter) as voter_cnts,
-            candidate
+            candidate,
+            1/count(case when candidate is not null then voter else null end) over (partition by voter) as cnts
         from 
             Votes
     ) a
@@ -15,15 +14,16 @@ with base as (
         candidate
 )
 select 
+    distinct 
     candidate
 from (
     select 
         candidate,
-        dense_rank() over (order by votes desc) as ranks
+        dense_rank() over (order by sums desc) as ranks
     from 
         base
 ) a
 where 
-    ranks = 1
+    candidate is not null and ranks = 1
 order by
-    candidate asc 
+    candidate
