@@ -3,18 +3,18 @@ with base as (
     select 
         user_id,
         product_id,
-        dense_rank() over (partition by user_id order by price desc) as ranks
+        dense_rank() over (partition by user_id order by sales desc) as ranks
     from (
         select 
             a.user_id,
             a.product_id,
-            sum(a.quantity * b.price) as price
+            sum(a.quantity * coalesce(b.price,0)) as sales
         from 
             Sales a 
-        inner join 
+        left join 
             Product b 
         on 
-            a.product_id = b.product_id 
+            a.product_id = b.product_id
         group by 
             a.user_id, a.product_id
     ) a
