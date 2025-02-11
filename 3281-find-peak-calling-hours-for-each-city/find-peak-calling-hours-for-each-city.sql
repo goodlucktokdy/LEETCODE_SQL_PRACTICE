@@ -2,27 +2,27 @@
 with base as (
     select 
         city,
-        hour,
-        number_of_calls,
-        dense_rank() over (partition by city order by number_of_calls desc) as ranks
+        hours,
+        cnts,
+        dense_rank() over (partition by city order by cnts desc) as ranks
     from (
         select 
             city,
-            extract(hour from call_time) as hour,
-            count(distinct call_time) as number_of_calls
+            extract(hour from call_time) as hours,
+            count(extract(hour from call_time)) as cnts
         from 
             Calls
         group by 
-            city, hour
+            city, extract(hour from call_time)
     ) a
 )
 select 
     city,
-    hour as peak_calling_hour,
-    number_of_calls
+    hours as peak_calling_hour,
+    cnts as number_of_calls
 from 
     base 
 where 
     ranks = 1
 order by 
-    peak_calling_hour desc, city desc 
+    peak_calling_hour desc, city desc
