@@ -1,1 +1,1 @@
-<h2>rolling-average-steps Notes</h2><hr>[ Time taken: 12 m 37 s ]
+<h2>rolling-average-steps Notes</h2><hr>[ Time taken: 6 m 56 s ]
