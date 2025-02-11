@@ -15,4 +15,4 @@ from (
 where 
     ranks = 1
 order by 
-    city_id 
+    city_id asc 
