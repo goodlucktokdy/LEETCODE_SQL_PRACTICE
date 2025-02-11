@@ -3,38 +3,39 @@ with base as (
     select 
         a.seller_id,
         b.item_brand,
-        count(distinct a.item_id) as num_items
+        count(distinct a.item_id) as cnts
     from 
         Orders a 
     inner join 
         Items b 
     on 
-        a.item_id = b.item_id 
+        a.item_id = b.item_id
     group by 
         a.seller_id, b.item_brand
 ),
-ranks_info as (
+ranks_cte as (
     select 
         seller_id,
-        num_items,
-        dense_rank() over (order by num_items desc) as ranks
+        sums,
+        dense_rank() over (order by sums desc) as ranks
     from (
         select 
             seller_id,
-            sum(num_items) as num_items
+            sum(cnts) as sums 
         from 
-            base 
-        where 
-            (seller_id,item_brand) not in (select seller_id, favorite_brand from Users)
+            base a
+        where exists 
+            (select 1 from Users b
+                where a.seller_id = b.seller_id and a.item_brand != b.favorite_brand)
         group by 
             seller_id
     ) a
 )
 select 
     seller_id,
-    num_items
+    sums as num_items
 from 
-    ranks_info 
+    ranks_cte
 where 
     ranks = 1
 order by 
