@@ -1,1 +1,1 @@
-<h2>find-active-users Notes</h2><hr>[ Time taken: 3 m 45 s ]
+<h2>find-active-users Notes</h2><hr>[ Time taken: 2 m 30 s ]
