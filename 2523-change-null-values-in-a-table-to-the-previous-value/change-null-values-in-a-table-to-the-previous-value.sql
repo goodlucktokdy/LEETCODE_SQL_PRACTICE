@@ -2,22 +2,22 @@
 with base as (
     select 
         id,
-        ranks,
         drink,
-        sum(case when drink is null then 0 else 1 end) over (order by ranks) as sess
+        rnums,
+        sum(case when drink is null then 0 else 1 end) over (order by rnums asc) as ranks
     from (
         select 
             id,
-            row_number() over () as ranks,
+            row_number() over () as rnums,
             drink
-        from
+        from 
             CoffeeShop
     ) a
 )
 select 
     id,
-    first_value(drink) over (partition by sess order by ranks) as drink
+    first_value(drink) over (partition by ranks order by rnums) as drink
 from 
-    base 
+    base
 order by 
-    ranks
+    rnums
