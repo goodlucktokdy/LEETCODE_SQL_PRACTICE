@@ -1,14 +1,14 @@
 # Write your MySQL query statement below
-with state_info as (
+with base as (
     select 
-        fail_date as dates,
-        'failed' as period_state
+        'failed' as period_state,
+        fail_date as dates
     from 
         Failed
     union all
     select 
-        success_date as dates,
-        'succeeded' as period_state
+        'succeeded' as period_state,
+        success_date as dates
     from 
         Succeeded
 )
@@ -22,11 +22,11 @@ from (
         dates,
         date_sub(dates,interval row_number() over (partition by period_state order by dates) day) as sess
     from 
-        state_info
+        base
     where 
-        dates between '2019-01-01' and '2019-12-31'
-) a 
+        year(dates) = 2019
+) a
 group by 
-    period_state, sess
+    period_state,sess
 order by 
     start_date
