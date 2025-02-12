@@ -10,10 +10,11 @@ with base as (
         from 
             SurveyLog
         group by 
-            question_id
+            id,question_id
     ) a
 )
 select 
+    distinct
     question_id as survey_log
 from 
     base 
