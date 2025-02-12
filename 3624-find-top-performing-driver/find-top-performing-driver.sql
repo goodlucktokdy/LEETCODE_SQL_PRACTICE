@@ -1,23 +1,18 @@
 # Write your MySQL query statement below
 with base as (
     select 
-        b.fuel_type,
+        a.fuel_type,
         a.driver_id,
-        round(avg(c.rating),2) as rating,
-        sum(c.distance) as distance,
-        sum(a.accidents) as accidents
+        round(avg(b.rating),2) as rating,
+        sum(b.distance) as distance 
     from 
-        Drivers a 
+        Vehicles a 
     inner join 
-        Vehicles b 
+        Trips b 
     on 
-        a.driver_id = b.driver_id
-    inner join 
-        Trips c 
-    on 
-        b.vehicle_id = c.vehicle_id
+        a.vehicle_id = b.vehicle_id
     group by 
-        b.fuel_type, a.driver_id
+        a.fuel_type, a.driver_id
 )
 select 
     fuel_type,
@@ -26,13 +21,17 @@ select
     distance
 from (
     select 
-        fuel_type,
-        driver_id,
-        rating,
-        distance,
-        dense_rank() over (partition by fuel_type order by rating desc, distance desc, accidents asc) as ranks
+        a.fuel_type,
+        a.driver_id,
+        a.rating,
+        a.distance,
+        dense_rank() over (partition by fuel_type order by a.rating desc, a.distance desc, b.accidents asc) as ranks
     from 
-        base
+        base a 
+    inner join 
+        Drivers b 
+    on 
+        a.driver_id = b.driver_id
 ) a
 where 
     ranks = 1
