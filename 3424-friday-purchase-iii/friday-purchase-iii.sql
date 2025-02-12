@@ -1,37 +1,34 @@
 # Write your MySQL query statement below
 with recursive cte as (
     select 
-        '2023-11-01' as dates
+        '2023-11-01' as dates,
+        'Premium' as membership
     union all
     select 
-        date_add(cte.dates, interval 1 day) as dates
+        date_add(cte.dates,interval 1 day) as dates,
+        'VIP' as membership
     from 
         cte 
     where 
         cte.dates < date_sub('2023-12-01',interval 1 day)
 ),
-weeks_cte as (
+base as (
     select 
-        week(dates) - week('2023-11-01') + 1 as week_of_month,
-        'VIP' as membership
+        distinct
+        week(a.dates) - week('2023-11-01') + 1 as week_of_month,
+        b.membership
     from 
-        cte
+        cte a 
+    cross join 
+        cte b 
     where 
-        weekday(dates) = 4
-    union
-    select 
-        week(dates) - week('2023-11-01') + 1 as week_of_month,
-        'Premium' as membership
-    from 
-        cte
-    where 
-        weekday(dates) = 4
+        weekday(a.dates) = 4
 ),
-dates_cte as (
+user_sales_info as (
     select 
         week(a.purchase_date) - week('2023-11-01') + 1 as week_of_month,
         b.membership,
-        sum(amount_spend) as total_amount
+        sum(a.amount_spend) as total_amount
     from 
         Purchases a 
     inner join 
@@ -39,18 +36,18 @@ dates_cte as (
     on 
         a.user_id = b.user_id 
     where 
-        b.membership in ('Premium','VIP') and weekday(a.purchase_date) = 4
+        weekday(a.purchase_date) = 4
     group by 
-        week_of_month, b.membership
+        week(a.purchase_date) - week('2023-11-01') + 1, b.membership
 )
 select 
     a.week_of_month as week_of_month,
-    a.membership as membership,
+    a.membership as membership, 
     coalesce(b.total_amount,0) as total_amount
 from 
-    weeks_cte a 
+    base a 
 left join 
-    dates_cte b 
+    user_sales_info b 
 on 
     a.week_of_month = b.week_of_month and a.membership = b.membership
 order by 
