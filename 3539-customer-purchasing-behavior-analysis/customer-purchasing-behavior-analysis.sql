@@ -6,7 +6,7 @@ with base as (
         transaction_count,
         unique_categories,
         avg_transaction_amount,
-        round((transaction_count * 10) + (total_amount/100),2) as loyalty_score
+        round(transaction_count * 10 + total_amount/100,2) as loyalty_score
     from (
         select 
             a.customer_id,
@@ -15,33 +15,33 @@ with base as (
             count(distinct b.category) as unique_categories,
             round(avg(a.amount),2) as avg_transaction_amount
         from 
-            Transactions a
+            Transactions a 
         inner join 
             Products b 
         on 
             a.product_id = b.product_id
         group by 
             a.customer_id
-    ) a
+    ) c
 ),
-category_ranks as (
+top_cat_cte as (
     select 
         customer_id,
         category,
-        dense_rank() over (partition by customer_id order by cnts desc, transaction_date desc) as ranks
+        dense_rank() over (partition by customer_id order by orders desc, transaction_date desc) as ranks
     from (
         select 
             a.customer_id,
             b.category,
             a.transaction_date,
-            count(a.transaction_id) over (partition by a.customer_id,b.category) as cnts
+            count(a.transaction_id) over (partition by a.customer_id,b.category) as orders
         from 
             Transactions a 
         inner join 
             Products b 
         on 
             a.product_id = b.product_id
-    ) a
+    ) c
 )
 select 
     a.customer_id,
@@ -54,7 +54,7 @@ select
 from 
     base a 
 inner join 
-    category_ranks b 
+    top_cat_cte b 
 on 
     a.customer_id = b.customer_id 
 where 
