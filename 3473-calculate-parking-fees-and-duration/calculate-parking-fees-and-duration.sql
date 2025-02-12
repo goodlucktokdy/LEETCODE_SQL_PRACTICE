@@ -1,17 +1,30 @@
 # Write your MySQL query statement below
-with base as (
+with fee_cte as (
+    select 
+        car_id,
+        round(total_fee_paid,2) as total_fee_paid,
+        round(total_fee_paid/(total_time/3600),2) as avg_hourly_fee
+    from (
+        select 
+            car_id,
+            sum(timestampdiff(second,entry_time,exit_time)) as total_time,
+            sum(fee_paid) as total_fee_paid
+        from 
+            ParkingTransactions
+        group by 
+            car_id
+    ) a
+),
+lot_cte as (
     select 
         car_id,
         lot_id,
-        diff_seconds,
-        total_fee_paid,
-        dense_rank() over (partition by car_id order by diff_seconds desc) as lot_ranks
+        dense_rank() over (partition by car_id order by lot_times desc) as ranks
     from (
         select 
             car_id,
             lot_id,
-            sum(timestampdiff(second,entry_time,exit_time)) as diff_seconds,
-            sum(fee_paid) as total_fee_paid
+            sum(timestampdiff(second,entry_time,exit_time)) as lot_times
         from 
             ParkingTransactions
         group by 
@@ -19,13 +32,17 @@ with base as (
     ) a
 )
 select 
-    car_id,
-    round(sum(total_fee_paid),2) as total_fee_paid,
-    round(sum(total_fee_paid)/(sum(diff_seconds)/3600),2) as avg_hourly_fee,
-    max(case when lot_ranks = 1 then lot_id else null end) as most_time_lot
+    a.car_id,
+    a.total_fee_paid,
+    a.avg_hourly_fee,
+    b.lot_id as most_time_lot
 from 
-    base 
-group by 
-    car_id 
+    fee_cte a 
+inner join 
+    lot_cte b 
+on 
+    a.car_id = b.car_id
+where 
+    b.ranks = 1
 order by 
-    car_id
+    a.car_id asc 
