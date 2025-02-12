@@ -5,10 +5,10 @@ select
 from (
     select 
         log_id,
-        log_id - row_number() over (order by log_id) as sess
+        log_id - cast(row_number() over (order by log_id) as real) as sess
     from 
         Logs
-) a 
+) a
 group by 
     sess
 order by 
