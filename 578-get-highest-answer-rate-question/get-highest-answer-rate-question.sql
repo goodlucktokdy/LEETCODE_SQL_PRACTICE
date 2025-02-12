@@ -10,7 +10,7 @@ with base as (
         from 
             SurveyLog
         group by 
-            id,question_id
+            question_id
     ) a
 )
 select 
