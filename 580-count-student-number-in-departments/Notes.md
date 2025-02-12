@@ -1,1 +1,1 @@
-<h2>count-student-number-in-departments Notes</h2><hr>[ Time taken: 3 m 33 s ]
+<h2>count-student-number-in-departments Notes</h2><hr>[ Time taken: 2 m 6 s ]
