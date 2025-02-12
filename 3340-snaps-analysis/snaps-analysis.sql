@@ -1,6 +1,5 @@
 # Write your MySQL query statement below
 select 
-    distinct
     age_bucket,
     round(100.0*send_sum/(open_sum + send_sum),2) as send_perc,
     round(100.0*open_sum/(open_sum + send_sum),2) as open_perc
