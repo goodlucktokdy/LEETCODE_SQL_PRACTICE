@@ -1,20 +1,36 @@
 # Write your MySQL query statement below
 with base as (
+        select 
+            server_id,
+            status_time,
+            row_number() over (partition by server_id, session_status order by status_time) as sess
+        from 
+            Servers
+),
+sess_info as (
     select 
         server_id,
-        timestampdiff(minute,min(status_time),max(status_time)) as diff_minute
+        status_time,
+        sess
     from (
         select 
             server_id,
             status_time,
-            row_number() over (partition by server_id,session_status order by status_time) as sess
+            sess,
+            count(server_id) over (partition by server_id, sess) as cnts
         from 
-            Servers
+            base
     ) a
-    group by 
-        sess,server_id
+    where 
+        cnts = 2
 )
 select 
-    floor(sum(diff_minute)/(60*24)) as total_uptime_days
-from 
-    base
+    floor(sum(sums)/(3600 * 24)) as total_uptime_days
+from (
+    select 
+        timestampdiff(second,min(status_time),max(status_time)) as sums
+    from 
+        sess_info
+    group by 
+        server_id, sess
+) a
