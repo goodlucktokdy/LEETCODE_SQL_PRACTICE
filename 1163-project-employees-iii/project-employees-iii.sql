@@ -6,14 +6,13 @@ from (
     select 
         a.project_id,
         a.employee_id,
-        b.experience_years,
-        dense_rank() over (partition by a.project_id order by b.experience_years desc) as ranks
+        dense_rank() over (partition by a.project_id order by coalesce(b.experience_years,0) desc) as ranks
     from 
         Project a 
-    inner join 
+    left join 
         Employee b 
     on 
-        a.employee_id = b.employee_id 
-) a 
+        a.employee_id = b.employee_id
+) c
 where 
     ranks = 1
