@@ -1,28 +1,28 @@
 # Write your MySQL query statement below
 with base as (
     select 
+        emp_id,
+        emp_name,
         dep_id,
-        dense_rank() over (order by emp_num desc) as ranks
+        position,
+        dense_rank() over (order by dep_cnts desc) as ranks
     from (
         select 
+            emp_id,
+            emp_name,
             dep_id,
-            count(distinct emp_id) as emp_num
+            count(emp_id) over (partition by dep_id) as dep_cnts,
+            position
         from 
-            Employees 
-        group by 
-            dep_id
+            Employees
     ) a
 )
 select 
-    a.emp_name as manager_name,
-    b.dep_id
+    emp_name as manager_name,
+    dep_id
 from 
-    Employees a 
-inner join 
-    base b 
-on 
-    a.dep_id = b.dep_id and b.ranks = 1
+    base 
 where 
-    a.position = 'manager'
+    ranks = 1 and position = 'Manager'
 order by 
-    b.dep_id
+    dep_id asc
