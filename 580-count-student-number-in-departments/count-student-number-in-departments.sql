@@ -9,6 +9,6 @@ left join
 on 
     a.dept_id = b.dept_id
 group by 
-    dept_name
+    a.dept_name
 order by 
     student_number desc, dept_name asc 
