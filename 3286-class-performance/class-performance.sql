@@ -1,10 +1,12 @@
 # Write your MySQL query statement below
 select 
-    max_score - min_score as difference_in_score
+    max(total_score) - min(total_score) as difference_in_score
 from (
     select 
-        max(assignment1 + assignment2 + assignment3) as max_score,
-        min(assignment1 + assignment2 + assignment3) as min_score
+        student_id,
+        sum(assignment1 + assignment2 + assignment3) as total_score
     from 
         Scores
+    group by 
+        student_id
 ) a
