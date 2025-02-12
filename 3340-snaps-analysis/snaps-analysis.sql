@@ -1,20 +1,20 @@
 # Write your MySQL query statement below
 select 
+    distinct
     age_bucket,
-    round(100.0*send_time/total_time,2) as send_perc,
-    round(100.0*open_time/total_time,2) as open_perc
+    round(100.0*send_sum/(open_sum + send_sum),2) as send_perc,
+    round(100.0*open_sum/(open_sum + send_sum),2) as open_perc
 from (
     select 
-        a.age_bucket,
-        sum(case when b.activity_type = 'send' then b.time_spent else 0 end) as send_time,
-        sum(case when b.activity_type = 'open' then b.time_spent else 0 end) as open_time,
-        sum(b.time_spent) as total_time
+        b.age_bucket,
+        sum(case when activity_type = 'open' then time_spent else 0 end) as open_sum,
+        sum(case when activity_type = 'send' then time_spent else 0 end) as send_sum
     from 
-        Age a 
+        Activities a 
     inner join 
-        Activities b 
+        Age b 
     on 
-        a.user_id = b.user_id
+        a.user_id = b.user_id 
     group by 
-        a.age_bucket
+        b.age_bucket
 ) a
