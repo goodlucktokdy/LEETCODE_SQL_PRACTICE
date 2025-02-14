@@ -1,1 +1,1 @@
-<h2>running-total-for-different-genders Notes</h2><hr>[ Time taken: 37 s ]
+<h2>running-total-for-different-genders Notes</h2><hr>[ Time taken: 1 m 2 s ]
