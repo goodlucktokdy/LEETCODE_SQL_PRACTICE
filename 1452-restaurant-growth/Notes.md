@@ -1,1 +1,1 @@
-<h2>restaurant-growth Notes</h2><hr>[ Time taken: 16 m 38 s ]
+<h2>restaurant-growth Notes</h2><hr>[ Time taken: 4 m 49 s ]
