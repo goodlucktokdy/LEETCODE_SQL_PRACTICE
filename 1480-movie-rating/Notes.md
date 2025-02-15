@@ -1,1 +1,1 @@
-<h2>movie-rating Notes</h2><hr>[ Time taken: 5 m 32 s ]
+<h2>movie-rating Notes</h2><hr>[ Time taken: 8 m 16 s ]
