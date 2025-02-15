@@ -1,14 +1,12 @@
-# Write your MySQL query statement below
-with names_cte as (
+# Write your MySQL query statement below 
+with base as (
     select 
-        user_id,
         name,
-        dense_rank() over (order by cnts desc, name asc) as ranks
+        dense_rank() over (order by cnts desc, name) as ranks
     from (
         select 
-            a.user_id,
             a.name,
-            count(distinct movie_id) as cnts
+            count(b.movie_id) as cnts
         from 
             Users a 
         inner join 
@@ -16,39 +14,39 @@ with names_cte as (
         on 
             a.user_id = b.user_id
         group by 
-            a.user_id, a.name
-    ) a
+            a.name
+    ) c
 ),
 movie_cte as (
     select 
-        movie_id,
         title,
         dense_rank() over (order by avg_rating desc, title asc) as ranks
     from (
         select 
-            a.movie_id,
             a.title,
             avg(b.rating) as avg_rating
         from 
-            MovieRating b
-        inner join 
             Movies a 
+        inner join 
+            MovieRating b
         on 
-            a.movie_id = b.movie_id and year(b.created_at) = 2020 and month(b.created_at) = 2
+            a.movie_id = b.movie_id
+        where
+            year(b.created_at) = 2020 and month(b.created_at) = 02
         group by 
-            a.movie_id, a.title
-    ) a
-)
+            a.title
+    ) c
+) 
 select 
     name as results
 from 
-    names_cte
+    base 
 where 
     ranks = 1
 union all
 select 
-    title
-from
+    title as results
+from 
     movie_cte
 where 
     ranks = 1
