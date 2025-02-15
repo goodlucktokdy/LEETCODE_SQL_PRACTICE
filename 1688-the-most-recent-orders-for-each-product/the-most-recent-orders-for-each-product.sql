@@ -6,19 +6,19 @@ select
     order_date
 from (
     select 
-        b.product_name,
-        b.product_id,
-        a.order_id,
-        a.order_date,
-        dense_rank() over (partition by a.product_id order by a.order_date desc) as ranks
+        a.product_name,
+        a.product_id,
+        b.order_id,
+        b.order_date,
+        dense_rank() over (partition by a.product_id order by b.order_date desc) as rnums
     from 
-        Orders a 
+        Products a 
     inner join 
-        Products b 
+        Orders b
     on 
         a.product_id = b.product_id
-) a
+) c
 where 
-    ranks = 1
+    rnums = 1
 order by 
-    product_name asc, product_id asc, order_id asc
+    product_name, product_id, order_id
