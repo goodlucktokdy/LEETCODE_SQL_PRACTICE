@@ -4,24 +4,23 @@ with base as (
         customer_id,
         product_id,
         product_name,
-        dense_rank() over (partition by customer_id order by orders desc) as ranks
+        dense_rank() over (partition by customer_id order by cnts desc) as ranks
     from (
         select 
-            b.customer_id,
+            a.customer_id,
             a.product_id,
-            a.product_name,
-            count(distinct b.order_id) as orders
+            b.product_name,
+            count(a.order_id) over (partition by a.customer_id,a.product_id) as cnts
         from 
-            Products a 
+            Orders a 
         inner join 
-            Orders b 
+            Products b 
         on 
             a.product_id = b.product_id
-        group by 
-            b.customer_id, a.product_id, a.product_name
-    ) a
+    ) c
 )
 select 
+    distinct
     customer_id,
     product_id,
     product_name
