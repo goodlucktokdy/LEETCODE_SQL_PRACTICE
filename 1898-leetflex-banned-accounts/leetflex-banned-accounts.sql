@@ -8,4 +8,4 @@ inner join
     LogInfo b 
 on 
     a.account_id = b.account_id and a.ip_address != b.ip_address
-    and (a.login <= b.login and b.login <= a.logout)
+and a.login <= b.login and b.login <= a.logout
